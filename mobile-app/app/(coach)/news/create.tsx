@@ -188,11 +188,11 @@ export default function CreatePostScreen() {
         value={title}
         onChangeText={setTitle}
         placeholder="Enter post title..."
-        mode="outlined"
+        mode="flat"
         maxLength={200}
         style={styles.input}
-        outlineColor={Colors.border}
-        activeOutlineColor={Colors.primary}
+        activeUnderlineColor={Colors.primary}
+        underlineColor="transparent"
         textColor={Colors.text}
         placeholderTextColor={Colors.textSecondary}
       />
@@ -203,13 +203,13 @@ export default function CreatePostScreen() {
         value={content}
         onChangeText={setContent}
         placeholder={t('news.postPlaceholder')}
-        mode="outlined"
+        mode="flat"
         multiline
         numberOfLines={6}
         maxLength={5000}
         style={[styles.input, styles.textArea]}
-        outlineColor={Colors.border}
-        activeOutlineColor={Colors.primary}
+        activeUnderlineColor={Colors.primary}
+        underlineColor="transparent"
         textColor={Colors.text}
         placeholderTextColor={Colors.textSecondary}
       />
@@ -273,7 +273,7 @@ export default function CreatePostScreen() {
 
       {/* Cancel Button */}
       <Button
-        mode="outlined"
+        mode="flat"
         onPress={() => router.back()}
         style={styles.cancelButton}
         textColor={Colors.textSecondary}
@@ -323,9 +323,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: Colors.surface,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderStyle: 'dashed',
     borderRadius: BorderRadius.md,
     paddingVertical: Spacing.md,
     gap: Spacing.sm,

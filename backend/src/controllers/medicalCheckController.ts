@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import MedicalCheck from '../models/MedicalCheck';
 import Member from '../models/Member';
+import Notification from '../models/Notification';
 
 export const createMedicalCheck = async (req: Request, res: Response) => {
   try {
@@ -49,6 +50,27 @@ export const createMedicalCheck = async (req: Request, res: Response) => {
       expiryDate: new Date(actualValidUntil),
     };
     await member.save();
+
+    // Notify member/parent about medical check recorded
+    try {
+      const recipientId = member.userId || member.parentId;
+      const clubId = member.clubs && member.clubs.length > 0 ? member.clubs[0].clubId : null;
+      if (recipientId && clubId) {
+        await Notification.createNotification({
+          clubId,
+          recipientId,
+          senderId: req.user._id,
+          type: 'MEDICAL_EXPIRY',
+          title: 'Lekarski pregled evidentiran',
+          message: `Lekarski pregled za ${member.fullName} je evidentiran. Važi do ${new Date(actualValidUntil).toLocaleDateString('sr-RS')}.`,
+          data: { medicalCheckId: medicalCheck._id, memberId: member._id.toString() },
+          deliveryMethods: ['IN_APP', 'PUSH'],
+          priority: 'MEDIUM',
+        });
+      }
+    } catch (notifError) {
+      console.error('Failed to send medical check notification:', notifError);
+    }
 
     return res.status(201).json({ success: true, data: medicalCheck });
   } catch (error: any) {

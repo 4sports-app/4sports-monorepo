@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
+import { sendPushNotification } from '../services/pushNotificationService';
 
 export interface INotification extends Document {
   _id: mongoose.Types.ObjectId;
@@ -158,12 +159,41 @@ notificationSchema.statics.createNotification = async function (data: {
     deliveryStatus.email = 'PENDING';
   }
 
-  return this.create({
+  const notification = await this.create({
     ...data,
     deliveryMethods: data.deliveryMethods || ['IN_APP'],
     priority: data.priority || 'MEDIUM',
     deliveryStatus,
   });
+
+  // Send push notification via Expo if PUSH is a delivery method
+  if (data.deliveryMethods?.includes('PUSH')) {
+    try {
+      const pushData: Record<string, string> = {
+        type: data.type,
+        notificationId: notification._id.toString(),
+      };
+      if (data.data?.eventId) pushData.eventId = data.data.eventId.toString();
+      if (data.data?.paymentId) pushData.paymentId = data.data.paymentId.toString();
+      if (data.data?.medicalCheckId) pushData.medicalCheckId = data.data.medicalCheckId.toString();
+      if (data.data?.memberId) pushData.memberId = data.data.memberId.toString();
+
+      await sendPushNotification(
+        [data.recipientId.toString()],
+        data.title,
+        data.message,
+        pushData
+      );
+      notification.deliveryStatus.push = 'DELIVERED';
+      await notification.save();
+    } catch (error) {
+      console.error('Push notification send failed:', error);
+      notification.deliveryStatus.push = 'FAILED';
+      await notification.save();
+    }
+  }
+
+  return notification;
 };
 
 const Notification = mongoose.model<INotification, INotificationModel>('Notification', notificationSchema);

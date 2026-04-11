@@ -135,8 +135,6 @@ export default function TopHeader({ basePath }: TopHeaderProps) {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: Colors.background,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   content: {
     flexDirection: 'row',

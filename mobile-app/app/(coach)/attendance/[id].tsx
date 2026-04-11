@@ -170,7 +170,7 @@ export default function EventSessionScreen() {
               <View style={styles.eventRow}>
                 <MaterialCommunityIcons name="calendar" size={16} color={Colors.textSecondary} />
                 <Text style={styles.eventDetailText}>
-                  {new Date(event.date).toLocaleDateString()}
+                  {new Date(event.date).toLocaleDateString('en-GB')}
                 </Text>
               </View>
               <View style={styles.eventRow}>

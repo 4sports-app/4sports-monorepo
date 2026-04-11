@@ -152,7 +152,7 @@ export default function ManualAddScreen() {
             <View style={styles.eventInfo}>
               <Text style={styles.eventTitle}>{event.title}</Text>
               <Text style={styles.eventMeta}>
-                {new Date(event.date).toLocaleDateString()} • {event.startTime} - {event.endTime}
+                {new Date(event.date).toLocaleDateString('en-GB')} • {event.startTime} - {event.endTime}
               </Text>
             </View>
             <View style={[styles.typeBadge, { backgroundColor: Colors.eventTraining + '20' }]}>

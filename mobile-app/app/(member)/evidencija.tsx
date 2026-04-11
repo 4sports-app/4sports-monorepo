@@ -68,7 +68,7 @@ export default function EvidencijaScreen() {
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return '--';
-    return new Date(dateString).toLocaleDateString();
+    return new Date(dateString).toLocaleDateString('en-GB');
   };
 
   const getGroupName = () => {
@@ -658,7 +658,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: Spacing.md,
-    paddingBottom: Spacing.xxl,
+    paddingBottom: 120,
   },
   centerContainer: {
     flex: 1,

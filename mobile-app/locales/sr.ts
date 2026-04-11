@@ -367,6 +367,11 @@ export default {
     addEquipment: 'Dodaj opremu',
     addNewEquipment: 'Dodaj novu opremu',
     newEquipment: 'Nova oprema',
+    searchLocation: 'Pretraži lokaciju...',
+    previousLocations: 'Prethodne lokacije',
+    selectGroupRequired: 'Izaberite grupu',
+    endTimeAfterStart: 'Vreme završetka mora biti posle vremena početka',
+    locationRequired: 'Lokacija je obavezno polje',
   },
 
   // Attendance
@@ -625,6 +630,13 @@ export default {
     pushNotifications: 'Push obaveštenja',
     emailNotifications: 'Email obaveštenja',
     helpSupport: 'Pomoć i podrška',
+    changePassword: 'Promeni lozinku',
+    changePasswordDescription: 'Unesite trenutnu lozinku i izaberite novu lozinku za vaš nalog.',
+    currentPassword: 'Trenutna lozinka',
+    newPassword: 'Nova lozinka',
+    confirmPassword: 'Potvrdi novu lozinku',
+    passwordChanged: 'Lozinka je uspešno promenjena',
+    samePassword: 'Nova lozinka mora biti različita od trenutne',
     about: 'O aplikaciji',
     version: 'Verzija',
     switchAccount: 'Promeni nalog',
@@ -709,6 +721,8 @@ export default {
     noEventsOnDate: 'Nema događaja na ovaj datum',
     eventsOn: 'Događaji {{date}}',
     loadingCalendar: 'Učitavanje kalendara...',
+    myEvents: 'Moji',
+    allCoaches: 'Svi treneri',
   },
 
   // Empty States

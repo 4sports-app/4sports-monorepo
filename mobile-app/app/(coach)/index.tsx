@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
+import { useCallback } from 'react';
+import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Text, Card, Button, ActivityIndicator, Avatar } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
@@ -8,8 +8,6 @@ import { Spacing, BorderRadius, FontSize } from '@/constants/Layout';
 import { useAuth } from '@/services/AuthContext';
 import { useLanguage } from '@/services/LanguageContext';
 import { useCoachDashboard } from '@/hooks/useDashboard';
-import api from '@/services/api';
-import { Post } from '@/types';
 
 // Helper function to get event type color for any type string
 const getEventTypeColorFromString = (type: string): string => {
@@ -54,52 +52,16 @@ export default function CoachDashboard() {
   const { user } = useAuth();
   const { t } = useLanguage();
   const { data: dashboardStats, isLoading, refetch } = useCoachDashboard();
-  const [latestPost, setLatestPost] = useState<(Post & { author?: { fullName: string; profilePicture?: string } }) | null>(null);
-  const [isLoadingNews, setIsLoadingNews] = useState(true);
-
-  const fetchLatestPost = useCallback(async () => {
-    try {
-      const response = await api.get('/posts?limit=1');
-      const posts = response.data.data || [];
-      if (posts.length > 0) {
-        setLatestPost(posts[0]);
-      }
-    } catch (error) {
-      console.error('Error fetching latest post:', error);
-    } finally {
-      setIsLoadingNews(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchLatestPost();
-  }, [fetchLatestPost]);
 
   useFocusEffect(
     useCallback(() => {
       refetch();
-      fetchLatestPost();
-    }, [refetch, fetchLatestPost])
+    }, [refetch])
   );
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
-
-  const formatPostDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / (1000 * 60));
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-    if (diffMins < 1) return t('time.justNow') || 'Just now';
-    if (diffMins < 60) return `${diffMins}m`;
-    if (diffHours < 24) return `${diffHours}h`;
-    if (diffDays < 7) return `${diffDays}d`;
-    return date.toLocaleDateString();
   };
 
   // Split events into today and upcoming
@@ -193,60 +155,31 @@ export default function CoachDashboard() {
         <Text style={styles.userName}>{user?.fullName || t('roles.coach')}</Text>
       </View>
 
-      {/* Latest News Section */}
+      {/* News Section - Create Post */}
       <Text style={styles.sectionTitle}>{t('navigation.news')}</Text>
-      {isLoadingNews ? (
+      <TouchableOpacity onPress={() => router.push('/(coach)/news/create')} activeOpacity={0.7}>
         <Card style={styles.newsCard}>
-          <Card.Content style={styles.newsLoadingContent}>
-            <ActivityIndicator size="small" color={Colors.primary} />
-          </Card.Content>
-        </Card>
-      ) : latestPost ? (
-        <TouchableOpacity onPress={() => router.push('/(coach)/news')}>
-          <Card style={styles.newsCard}>
-            <Card.Content style={styles.newsCardContent}>
-              <View style={styles.newsHeader}>
-                {latestPost.author?.profilePicture ? (
-                  <Avatar.Image size={36} source={{ uri: latestPost.author.profilePicture }} />
-                ) : (
-                  <Avatar.Text
-                    size={36}
-                    label={(latestPost.author?.fullName || 'U').slice(0, 2).toUpperCase()}
-                    style={styles.newsAvatar}
-                  />
-                )}
-                <View style={styles.newsHeaderInfo}>
-                  <Text style={styles.newsAuthor}>{latestPost.author?.fullName || t('roles.coach')}</Text>
-                  <Text style={styles.newsTimestamp}>{formatPostDate(latestPost.createdAt)}</Text>
-                </View>
-              </View>
-              {latestPost.title && <Text style={styles.newsTitle} numberOfLines={1}>{latestPost.title}</Text>}
-              <Text style={styles.newsContent} numberOfLines={2}>{latestPost.content}</Text>
-              {latestPost.images && latestPost.images.length > 0 && (
-                <Image source={{ uri: latestPost.images[0] }} style={styles.newsImage} resizeMode="cover" />
+          <Card.Content style={styles.createPostCard}>
+            <View style={styles.createPostLeft}>
+              {user?.profileImage ? (
+                <Avatar.Image size={40} source={{ uri: user.profileImage }} />
+              ) : (
+                <Avatar.Text
+                  size={40}
+                  label={(user?.fullName || 'U').slice(0, 2).toUpperCase()}
+                  style={styles.newsAvatar}
+                />
               )}
-            </Card.Content>
-          </Card>
-          <TouchableOpacity style={styles.openNewsLink} onPress={() => router.push('/(coach)/news')}>
-            <Text style={styles.openNewsText}>{t('dashboard.openNews')}</Text>
-            <MaterialCommunityIcons name="chevron-right" size={16} color={Colors.primary} />
-          </TouchableOpacity>
-        </TouchableOpacity>
-      ) : (
-        <Card style={styles.newsCard}>
-          <Card.Content style={styles.emptyNewsContent}>
-            <MaterialCommunityIcons name="newspaper-variant-outline" size={32} color={Colors.textSecondary} />
-            <Text style={styles.emptyNewsText}>{t('news.noPosts')}</Text>
-            <Button
-              mode="contained"
-              onPress={() => router.push('/(coach)/news/create')}
-              style={styles.createPostButton}
-            >
-              {t('news.createPost')}
-            </Button>
+              <Text style={styles.createPostPlaceholder}>{t('news.createPost')}...</Text>
+            </View>
+            <MaterialCommunityIcons name="pencil-plus-outline" size={24} color={Colors.primary} />
           </Card.Content>
         </Card>
-      )}
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.openNewsLink} onPress={() => router.push('/(coach)/news')}>
+        <Text style={styles.openNewsText}>{t('dashboard.openNews')}</Text>
+        <MaterialCommunityIcons name="chevron-right" size={16} color={Colors.primary} />
+      </TouchableOpacity>
 
       {/* Today's Events - only show if there are events today */}
       {todayEvents.length > 0 && (
@@ -337,62 +270,24 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
     marginBottom: Spacing.xs,
   },
-  newsCardContent: {
-    padding: Spacing.sm,
-  },
-  newsLoadingContent: {
-    alignItems: 'center',
-    paddingVertical: Spacing.md,
-  },
-  newsHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: Spacing.sm,
-  },
   newsAvatar: {
     backgroundColor: Colors.primary,
   },
-  newsHeaderInfo: {
-    marginLeft: Spacing.sm,
+  createPostCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: Spacing.sm,
+  },
+  createPostLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
     flex: 1,
   },
-  newsAuthor: {
-    fontSize: FontSize.sm,
-    fontWeight: '600',
-    color: Colors.text,
-  },
-  newsTimestamp: {
-    fontSize: FontSize.xs,
-    color: Colors.textSecondary,
-  },
-  newsTitle: {
+  createPostPlaceholder: {
     fontSize: FontSize.md,
-    fontWeight: '600',
-    color: Colors.text,
-    marginBottom: Spacing.xs,
-  },
-  newsContent: {
-    fontSize: FontSize.sm,
     color: Colors.textSecondary,
-    lineHeight: 20,
-  },
-  newsImage: {
-    width: '100%',
-    height: 120,
-    borderRadius: BorderRadius.sm,
-    marginTop: Spacing.sm,
-  },
-  emptyNewsContent: {
-    alignItems: 'center',
-    paddingVertical: Spacing.md,
-  },
-  emptyNewsText: {
-    fontSize: FontSize.sm,
-    color: Colors.textSecondary,
-    marginTop: Spacing.xs,
-  },
-  createPostButton: {
-    marginTop: Spacing.md,
+    marginLeft: Spacing.sm,
   },
   openNewsLink: {
     flexDirection: 'row',

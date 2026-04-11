@@ -3,6 +3,7 @@ import { View, StyleSheet, ScrollView, RefreshControl, TouchableOpacity } from '
 import { Text, Card, Chip, ActivityIndicator, Button } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect, router } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors } from '@/constants/Colors';
 import { Spacing, BorderRadius, FontSize } from '@/constants/Layout';
 import { useLanguage } from '@/services/LanguageContext';
@@ -10,6 +11,8 @@ import EventCalendar from '@/components/EventCalendar';
 import DropdownMenu from '@/components/DropdownMenu';
 import api from '@/services/api';
 import { Event, Group } from '@/types';
+
+const SAVED_EVENT_TYPES_KEY = '@saved_event_types';
 
 type FilterType = 'all' | 'training' | 'competition';
 
@@ -32,7 +35,12 @@ const getRelativeTimeText = (eventDate: Date, t: any): string => {
 };
 
 // Helper function to get event type color for any type string
-const getEventTypeColorFromString = (type: string): string => {
+const getEventTypeColorFromString = (type: string, typeColorMap?: Record<string, string>): string => {
+  if (typeColorMap) {
+    if (typeColorMap[type]) return typeColorMap[type];
+    const typeId = type?.toUpperCase().replace(/\s+/g, '_');
+    if (typeColorMap[typeId]) return typeColorMap[typeId];
+  }
   const upperType = type?.toUpperCase() || '';
   if (upperType === 'TRAINING' || upperType.includes('TRENING')) {
     return Colors.eventTraining || Colors.primary;
@@ -56,6 +64,21 @@ export default function MemberCalendar() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [groupMenuVisible, setGroupMenuVisible] = useState(false);
+  const [eventTypeColorMap, setEventTypeColorMap] = useState<Record<string, string>>({});
+
+  const loadEventTypeColors = useCallback(async () => {
+    try {
+      const stored = await AsyncStorage.getItem(SAVED_EVENT_TYPES_KEY);
+      if (stored) {
+        const types: { id: string; label: string; color: string }[] = JSON.parse(stored);
+        const map: Record<string, string> = {};
+        types.forEach(t => { map[t.id] = t.color; });
+        setEventTypeColorMap(map);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
 
   const fetchGroups = useCallback(async () => {
     try {
@@ -89,12 +112,14 @@ export default function MemberCalendar() {
   useEffect(() => {
     fetchGroups();
     fetchEvents();
-  }, [fetchGroups, fetchEvents]);
+    loadEventTypeColors();
+  }, [fetchGroups, fetchEvents, loadEventTypeColors]);
 
   useFocusEffect(
     useCallback(() => {
       fetchEvents();
-    }, [fetchEvents])
+      loadEventTypeColors();
+    }, [fetchEvents, loadEventTypeColors])
   );
 
   const getSelectedGroupName = () => {
@@ -190,6 +215,7 @@ export default function MemberCalendar() {
           events={events}
           selectedDate={selectedDate}
           onDayPress={handleDayPress}
+          eventTypeColors={eventTypeColorMap}
         />
 
         {/* Group Filter */}
@@ -256,7 +282,7 @@ export default function MemberCalendar() {
         {/* Events List Section */}
         <Text style={styles.sectionTitle}>
           {selectedDate
-            ? `${t('events.eventsOn') || 'Događaji'} ${new Date(selectedDate).toLocaleDateString()}`
+            ? `${t('events.eventsOn') || 'Događaji'} ${new Date(selectedDate).toLocaleDateString('en-GB')}`
             : t('dashboard.upcomingEvents') || 'Predstojeći događaji'}
         </Text>
 
@@ -290,7 +316,7 @@ export default function MemberCalendar() {
                 <Card style={styles.eventCard}>
                   <Card.Content style={styles.eventCardContent}>
                     {/* Date Column */}
-                    <View style={[styles.dateColumn, { backgroundColor: getEventTypeColorFromString(event.type) }]}>
+                    <View style={[styles.dateColumn, { backgroundColor: getEventTypeColorFromString(event.type, eventTypeColorMap) }]}>
                       <Text style={styles.dateDay}>{dayNumber}</Text>
                       <Text style={styles.dateDayName}>{dayName}</Text>
                     </View>
@@ -355,7 +381,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: Spacing.md,
-    paddingBottom: Spacing.xxl,
+    paddingBottom: 120,
   },
   groupFilterContainer: {
     marginTop: Spacing.md,

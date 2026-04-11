@@ -24,6 +24,13 @@ export default function ProfileLayout() {
           presentation: 'modal',
         }}
       />
+      <Stack.Screen
+        name="change-password"
+        options={{
+          title: 'Change Password',
+          presentation: 'modal',
+        }}
+      />
     </Stack>
   );
 }

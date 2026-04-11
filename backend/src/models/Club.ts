@@ -23,6 +23,16 @@ export interface IClub extends Document {
   address?: string;
   phoneNumber?: string;
   email?: string;
+  logo?: string;
+  description?: string;
+  website?: string;
+  facebook?: string;
+  instagram?: string;
+  twitter?: string;
+  foundedYear?: string;
+  stadium?: string;
+  history?: string;
+  achievements?: string;
   subscriptionPlan: SubscriptionPlan;
   memberLimit: number;
   currentMembers: number;
@@ -88,6 +98,17 @@ const clubSchema = new Schema<IClub, IClubModel>(
         'Please provide a valid email address',
       ],
     },
+
+    logo: { type: String, trim: true },
+    description: { type: String, trim: true, maxlength: 1000 },
+    website: { type: String, trim: true },
+    facebook: { type: String, trim: true },
+    instagram: { type: String, trim: true },
+    twitter: { type: String, trim: true },
+    foundedYear: { type: String, trim: true },
+    stadium: { type: String, trim: true },
+    history: { type: String, trim: true, maxlength: 2000 },
+    achievements: { type: String, trim: true, maxlength: 2000 },
 
     // Subscription & Limits
     subscriptionPlan: {

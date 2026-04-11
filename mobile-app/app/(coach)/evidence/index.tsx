@@ -479,7 +479,7 @@ export default function EvidenceScreen() {
     if (diffDays === 0) return t('time.today');
     if (diffDays === 1) return t('time.yesterday');
     if (diffDays < 7) return `${diffDays} ${t('time.daysAgo')}`;
-    return date.toLocaleDateString('sr-RS', { day: '2-digit', month: '2-digit' });
+    return date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' });
   };
 
   // Filter members within groups by search query
@@ -775,6 +775,16 @@ export default function EvidenceScreen() {
 
       {/* Month Filter Dropdown */}
       {renderMonthFilter()}
+
+      {/* Active Month Label - only show when filter is different from current month */}
+      {activeTab === 'membership' && (selectedMonth !== new Date().getMonth() + 1 || selectedYear !== new Date().getFullYear()) && (
+        <View style={styles.activeMonthLabel}>
+          <MaterialCommunityIcons name="calendar-check" size={16} color={Colors.primary} />
+          <Text style={styles.activeMonthText}>
+            {getMonthName(selectedMonth)} {selectedYear}
+          </Text>
+        </View>
+      )}
 
       {/* Toggle Buttons */}
       <View style={styles.toggleContainer}>
@@ -1286,6 +1296,20 @@ const styles = StyleSheet.create({
   filterButtonActive: {
     backgroundColor: Colors.primary + '20',
   },
+  activeMonthLabel: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.xs,
+    marginHorizontal: Spacing.md,
+    marginTop: Spacing.sm,
+    paddingVertical: Spacing.xs,
+  },
+  activeMonthText: {
+    fontSize: FontSize.sm,
+    fontWeight: '600',
+    color: Colors.primary,
+  },
   monthFilterContainer: {
     backgroundColor: Colors.surface,
     marginHorizontal: Spacing.md,
@@ -1380,7 +1404,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: Spacing.md,
-    paddingBottom: 80,
+    paddingBottom: 160,
   },
   groupCardContainer: {
     marginBottom: Spacing.sm,

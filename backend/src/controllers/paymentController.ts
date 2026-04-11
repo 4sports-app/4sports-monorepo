@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import Payment from '../models/Payment';
 import Member from '../models/Member';
 import Transaction from '../models/Transaction';
+import Notification from '../models/Notification';
 import mongoose from 'mongoose';
 
 // Helper: find member's groupId for a given club
@@ -97,6 +98,26 @@ export const createPayment = async (req: Request, res: Response) => {
         );
       }
 
+      // Notify member about payment recorded
+      try {
+        const recipientId = member.userId || member.parentId;
+        if (recipientId) {
+          await Notification.createNotification({
+            clubId,
+            recipientId,
+            senderId: req.user._id,
+            type: 'PAYMENT_DUE',
+            title: 'Članarina evidentirana',
+            message: `Uplata od ${actualPaidAmount} ${existingPayment.currency} za ${member.fullName} je evidentirana.`,
+            data: { paymentId: existingPayment._id, memberId: member._id.toString() },
+            deliveryMethods: ['IN_APP', 'PUSH'],
+            priority: 'MEDIUM',
+          });
+        }
+      } catch (notifError) {
+        console.error('Failed to send payment notification:', notifError);
+      }
+
       return res.status(200).json({ success: true, data: existingPayment });
     }
 
@@ -124,7 +145,7 @@ export const createPayment = async (req: Request, res: Response) => {
       paymentData.paymentMethod = paymentMethod;
     }
 
-    const payment = await Payment.create(paymentData);
+    const payment = await (Payment.create as Function)(paymentData);
 
     // Auto-create Transaction for paid amount
     if (hasPaid && actualPaidAmount > 0) {
@@ -132,6 +153,28 @@ export const createPayment = async (req: Request, res: Response) => {
       await createTransactionForPayment(
         payment, actualPaidAmount, clubId, groupId, req.user._id, member.fullName
       );
+    }
+
+    // Notify member about payment recorded
+    if (hasPaid) {
+      try {
+        const recipientId = member.userId || member.parentId;
+        if (recipientId) {
+          await Notification.createNotification({
+            clubId,
+            recipientId,
+            senderId: req.user._id,
+            type: 'PAYMENT_DUE',
+            title: 'Članarina evidentirana',
+            message: `Uplata od ${actualPaidAmount} ${payment.currency} za ${member.fullName} je evidentirana.`,
+            data: { paymentId: payment._id, memberId: member._id.toString() },
+            deliveryMethods: ['IN_APP', 'PUSH'],
+            priority: 'MEDIUM',
+          });
+        }
+      } catch (notifError) {
+        console.error('Failed to send payment notification:', notifError);
+      }
     }
 
     return res.status(201).json({ success: true, data: payment });
@@ -211,12 +254,34 @@ export const markPaymentPaid = async (req: Request, res: Response) => {
     await payment.save();
 
     // Auto-create Transaction for the additional paid amount
+    const member = await Member.findById(payment.memberId);
     if (additionalAmount > 0 && clubId) {
-      const member = await Member.findById(payment.memberId);
       const groupId = member ? getMemberGroupId(member, clubId) : undefined;
       await createTransactionForPayment(
         payment, additionalAmount, clubId, groupId, req.user._id, member?.fullName || 'Član'
       );
+    }
+
+    // Notify member about payment recorded
+    if (member && clubId) {
+      try {
+        const recipientId = member.userId || member.parentId;
+        if (recipientId) {
+          await Notification.createNotification({
+            clubId,
+            recipientId,
+            senderId: req.user._id,
+            type: 'PAYMENT_DUE',
+            title: 'Članarina evidentirana',
+            message: `Uplata od ${additionalAmount} ${payment.currency} za ${member.fullName} je evidentirana.`,
+            data: { paymentId: payment._id, memberId: member._id.toString() },
+            deliveryMethods: ['IN_APP', 'PUSH'],
+            priority: 'MEDIUM',
+          });
+        }
+      } catch (notifError) {
+        console.error('Failed to send payment notification:', notifError);
+      }
     }
 
     return res.status(200).json({ success: true, data: payment });

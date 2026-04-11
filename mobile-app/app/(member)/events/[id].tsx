@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { View, StyleSheet, ScrollView, RefreshControl, Alert, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, ScrollView, RefreshControl, Alert, TouchableOpacity, Linking } from 'react-native';
 import { Text, Card, ActivityIndicator, Chip, Button, Avatar } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
@@ -68,6 +68,22 @@ export default function MemberEventDetailScreen() {
       console.error('Error fetching participants:', error);
     }
   }, [id, user?._id, memberId]);
+
+  const openInMaps = async (label?: string, coords?: { lat: number; lng: number; placeId?: string }) => {
+    try {
+      let url: string;
+      if (coords?.lat != null && coords?.lng != null) {
+        url = `https://www.google.com/maps/dir/?api=1&destination=${coords.lat},${coords.lng}`;
+      } else if (label) {
+        url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(label)}`;
+      } else {
+        return;
+      }
+      await Linking.openURL(url);
+    } catch (e) {
+      console.warn('Open maps error:', e);
+    }
+  };
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
@@ -363,13 +379,18 @@ export default function MemberEventDetailScreen() {
             {event.location && (
               <Card style={styles.card}>
                 <Card.Content>
-                  <View style={styles.infoRow}>
+                  <TouchableOpacity
+                    style={styles.infoRow}
+                    onPress={() => openInMaps(event.location, event.locationCoords)}
+                    activeOpacity={0.7}
+                  >
                     <MaterialCommunityIcons name="map-marker" size={24} color={Colors.primary} />
                     <View style={styles.infoContent}>
                       <Text style={styles.infoLabel}>{t('events.location')}</Text>
-                      <Text style={styles.infoValue}>{event.location}</Text>
+                      <Text style={[styles.infoValue, { color: Colors.primary }]}>{event.location}</Text>
                     </View>
-                  </View>
+                    <MaterialCommunityIcons name="open-in-new" size={20} color={Colors.textSecondary} />
+                  </TouchableOpacity>
                 </Card.Content>
               </Card>
             )}
@@ -640,7 +661,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: Spacing.md,
-    paddingBottom: Spacing.xxl,
+    paddingBottom: 120,
   },
   card: {
     backgroundColor: Colors.surface,

@@ -229,7 +229,11 @@ export default function ChatScreen() {
         ]}
       >
         {!isOwnMessage && (
-          <View style={styles.avatarSmall}>
+          <TouchableOpacity
+            style={styles.avatarSmall}
+            onPress={() => router.push(`/(coach)/users/${item.senderId}` as any)}
+            activeOpacity={0.7}
+          >
             {(conversation?.participantDetails[item.senderId]?.avatar || item.senderAvatar) ? (
               <Image
                 source={{ uri: conversation?.participantDetails[item.senderId]?.avatar || item.senderAvatar! }}
@@ -240,7 +244,7 @@ export default function ChatScreen() {
                 {item.senderName?.substring(0, 1).toUpperCase() || '?'}
               </Text>
             )}
-          </View>
+          </TouchableOpacity>
         )}
 
         <View

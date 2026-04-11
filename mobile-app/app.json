@@ -2,7 +2,7 @@
   "expo": {
     "name": "4sports",
     "slug": "app-4sports",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "scheme": "foursports",
     "orientation": "portrait",
     "icon": "./assets/mobile_icon.png",
@@ -18,6 +18,11 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.foursports.mobile",
+      "splash": {
+        "image": "./assets/mobile_icon.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#1a1a1a"
+      },
       "infoPlist": {
         "NSCameraUsageDescription": "Allow 4Sports to access your camera for QR code scanning.",
         "NSPhotoLibraryUsageDescription": "Allow 4Sports to access your photo library to upload profile pictures and media.",

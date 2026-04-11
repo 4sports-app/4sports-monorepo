@@ -364,6 +364,11 @@ export default {
     addEquipment: 'Add equipment',
     addNewEquipment: 'Add new equipment',
     newEquipment: 'New equipment',
+    searchLocation: 'Search location...',
+    previousLocations: 'Previous locations',
+    selectGroupRequired: 'Please select a group',
+    endTimeAfterStart: 'End time must be after start time',
+    locationRequired: 'Location is required',
   },
 
   // Attendance
@@ -622,6 +627,13 @@ export default {
     pushNotifications: 'Push Notifications',
     emailNotifications: 'Email Notifications',
     helpSupport: 'Help & Support',
+    changePassword: 'Change Password',
+    changePasswordDescription: 'Enter your current password and choose a new password for your account.',
+    currentPassword: 'Current Password',
+    newPassword: 'New Password',
+    confirmPassword: 'Confirm New Password',
+    passwordChanged: 'Password changed successfully',
+    samePassword: 'New password must be different from current',
     about: 'About',
     version: 'Version',
     switchAccount: 'Switch Account',
@@ -706,6 +718,8 @@ export default {
     noEventsOnDate: 'No events on this date',
     eventsOn: 'Events on {{date}}',
     loadingCalendar: 'Loading calendar...',
+    myEvents: 'Mine',
+    allCoaches: 'All coaches',
   },
 
   // Empty States

@@ -251,7 +251,7 @@ export default function MemberProfileScreen() {
             <View style={styles.infoText}>
               <Text style={styles.infoLabel}>Medical Check Expires</Text>
               <Text style={styles.infoValue}>
-                {new Date(member.medicalCheckExpiryDate).toLocaleDateString()}
+                {new Date(member.medicalCheckExpiryDate).toLocaleDateString('en-GB')}
               </Text>
             </View>
           </Card.Content>
@@ -266,7 +266,7 @@ export default function MemberProfileScreen() {
             <View style={styles.infoText}>
               <Text style={styles.infoLabel}>Last Payment</Text>
               <Text style={styles.infoValue}>
-                {new Date(member.lastPaymentDate).toLocaleDateString()}
+                {new Date(member.lastPaymentDate).toLocaleDateString('en-GB')}
               </Text>
             </View>
           </Card.Content>
@@ -293,7 +293,7 @@ export default function MemberProfileScreen() {
               />
               <View style={styles.attendanceInfo}>
                 <Text style={styles.attendanceDate}>
-                  {new Date(record.markedAt).toLocaleDateString()}
+                  {new Date(record.markedAt).toLocaleDateString('en-GB')}
                 </Text>
                 <Text style={styles.attendanceTime}>
                   {new Date(record.markedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

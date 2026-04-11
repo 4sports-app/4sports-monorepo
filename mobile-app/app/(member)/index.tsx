@@ -171,7 +171,7 @@ export default function MemberHome() {
     if (diffMins < 60) return `${diffMins}m`;
     if (diffHours < 24) return `${diffHours}h`;
     if (diffDays < 7) return `${diffDays}d`;
-    return date.toLocaleDateString();
+    return date.toLocaleDateString('en-GB');
   };
 
   // Split events

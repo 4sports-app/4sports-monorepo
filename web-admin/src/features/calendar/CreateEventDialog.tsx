@@ -173,6 +173,9 @@ export function CreateEventDialog({ open, onOpenChange, selectedDate, event }: C
     if (formData.startTime >= formData.endTime) {
       newErrors.endTime = t('validation.endTimeAfterStart');
     }
+    if (!formData.location.trim()) {
+      newErrors.location = t('validation.enterLocation') || 'Unesite lokaciju';
+    }
     if (formData.isRecurring && !formData.recurringUntil) {
       newErrors.recurringUntil = t('validation.selectRepeatEnd');
     }
@@ -211,7 +214,7 @@ export function CreateEventDialog({ open, onOpenChange, selectedDate, event }: C
         type: formData.type,
         startTime: startDateTime.toISOString(),
         endTime: endDateTime.toISOString(),
-        location: formData.location.trim() || undefined,
+        location: formData.location.trim(),
         equipment: formData.equipment.length > 0 ? formData.equipment : undefined,
         isRecurring: formData.isRecurring,
       };
@@ -590,6 +593,18 @@ export function CreateEventDialog({ open, onOpenChange, selectedDate, event }: C
               </div>
             )}
 
+            {/* Location (Required) */}
+            <div className="grid gap-2">
+              <Label htmlFor="location">{t('calendar.location') || 'Lokacija'} *</Label>
+              <Input
+                id="location"
+                value={formData.location}
+                onChange={(e) => handleChange('location', e.target.value)}
+                placeholder={t('calendar.enterLocation')}
+              />
+              {errors.location && <p className="text-sm text-red-500">{errors.location}</p>}
+            </div>
+
             {/* Separator */}
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
@@ -621,16 +636,6 @@ export function CreateEventDialog({ open, onOpenChange, selectedDate, event }: C
                   <p className="text-xs text-muted-foreground">
                     {t('calendar.titleAutoGenerate')}
                   </p>
-                </div>
-
-                <div className="grid gap-2">
-                  <Label htmlFor="location">{t('calendar.locationOptional')}</Label>
-                  <Input
-                    id="location"
-                    value={formData.location}
-                    onChange={(e) => handleChange('location', e.target.value)}
-                    placeholder={t('calendar.enterLocation')}
-                  />
                 </div>
 
                 <div className="grid gap-2">

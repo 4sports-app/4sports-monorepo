@@ -141,7 +141,7 @@ export default function RecordMedicalScreen() {
         icon="calendar"
         textColor={Colors.text}
       >
-        {examinationDate.toLocaleDateString()}
+        {examinationDate.toLocaleDateString('en-GB')}
       </Button>
       {showDatePicker && (
         <DateTimePicker
@@ -161,7 +161,7 @@ export default function RecordMedicalScreen() {
             <Text style={styles.expiryLabel}>{t('medical.expiryDate')}:</Text>
           </View>
           <Text style={styles.expiryDate}>
-            {new Date(examinationDate.getTime() + 6 * 30 * 24 * 60 * 60 * 1000).toLocaleDateString()}
+            {new Date(examinationDate.getTime() + 6 * 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-GB')}
           </Text>
           <Text style={styles.expiryNote}>
             ({t('medical.sixMonthsFromExam') || '6 months from examination date'})

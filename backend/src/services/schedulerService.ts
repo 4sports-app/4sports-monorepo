@@ -32,14 +32,14 @@ export const eventReminderJob = cron.schedule('0 * * * *', async () => {
         $gte: in24Hours,
         $lt: in25Hours,
       },
-      isCancelled: false,
+      status: { $ne: 'CANCELLED' },
     });
 
     for (const event of upcomingEvents) {
       // Get all members of the group
       const members = await Member.find({
         'clubs.clubId': event.clubId,
-        'clubs.groups': event.groupId,
+        'clubs.groupId': event.groupId,
       }).select('parentId userId');
 
       // Create notification for each member
@@ -62,10 +62,82 @@ export const eventReminderJob = cron.schedule('0 * * * *', async () => {
         });
       }
 
-      console.log(`✅ Sent reminders for event: ${event.title} (${members.length} members)`);
+      // Notify the event creator/coach
+      if (event.createdBy) {
+        const alreadyNotified = members.some(
+          (m) => m.userId?.toString() === event.createdBy?.toString()
+        );
+        if (!alreadyNotified) {
+          await Notification.createNotification({
+            clubId: event.clubId,
+            recipientId: event.createdBy,
+            type: 'EVENT_REMINDER',
+            title: `Upcoming Event: ${event.title}`,
+            message: `Reminder: Your event ${event.title} starts tomorrow at ${event.startTime.toLocaleTimeString()}.`,
+            data: { eventId: event._id },
+            deliveryMethods: ['IN_APP', 'PUSH'],
+            priority: 'HIGH',
+          });
+        }
+      }
+
+      console.log(`✅ Sent 24h reminders for event: ${event.title} (${members.length} members)`);
     }
 
-    console.log(`✅ Event reminder job completed. Processed ${upcomingEvents.length} events.`);
+    // ---- 2-hour reminders ----
+    const in2Hours = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+    const in3Hours = new Date(now.getTime() + 3 * 60 * 60 * 1000);
+
+    const soonEvents = await Event.find({
+      startTime: { $gte: in2Hours, $lt: in3Hours },
+      status: { $ne: 'CANCELLED' },
+    });
+
+    for (const event of soonEvents) {
+      const members = await Member.find({
+        'clubs.clubId': event.clubId,
+        'clubs.groupId': event.groupId,
+      }).select('parentId userId');
+
+      for (const member of members) {
+        const recipientId = member.userId || member.parentId;
+        if (!recipientId) continue;
+
+        await Notification.createNotification({
+          clubId: event.clubId,
+          recipientId,
+          type: 'EVENT_REMINDER',
+          title: `Starting Soon: ${event.title}`,
+          message: `Reminder: ${event.title} starts in 2 hours. Location: ${event.location || 'TBD'}`,
+          data: { eventId: event._id },
+          deliveryMethods: ['IN_APP', 'PUSH'],
+          priority: 'HIGH',
+        });
+      }
+
+      // Notify the event creator/coach
+      if (event.createdBy) {
+        const alreadyNotified = members.some(
+          (m) => m.userId?.toString() === event.createdBy?.toString()
+        );
+        if (!alreadyNotified) {
+          await Notification.createNotification({
+            clubId: event.clubId,
+            recipientId: event.createdBy,
+            type: 'EVENT_REMINDER',
+            title: `Starting Soon: ${event.title}`,
+            message: `Your event ${event.title} starts in 2 hours.`,
+            data: { eventId: event._id },
+            deliveryMethods: ['IN_APP', 'PUSH'],
+            priority: 'HIGH',
+          });
+        }
+      }
+
+      console.log(`✅ Sent 2h reminders for event: ${event.title} (${members.length} members)`);
+    }
+
+    console.log(`✅ Event reminder job completed. Processed ${upcomingEvents.length} (24h) + ${soonEvents.length} (2h) events.`);
   } catch (error) {
     console.error('❌ Event reminder job error:', error);
   }

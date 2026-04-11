@@ -336,7 +336,7 @@ const styles = StyleSheet.create({
   chatFab: {
     position: 'absolute',
     right: Spacing.md,
-    bottom: Spacing.xl,
+    bottom: 120,
     width: 56,
     height: 56,
     borderRadius: 28,

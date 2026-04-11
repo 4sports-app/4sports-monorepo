@@ -140,12 +140,12 @@ export default function GroupFormScreen() {
               label={`${t('groups.groupName')} *`}
               value={name}
               onChangeText={setName}
-              mode="outlined"
+              mode="flat"
               error={nameError}
               disabled={isSaving}
               style={styles.input}
-              outlineColor={Colors.border}
-              activeOutlineColor={Colors.primary}
+              activeUnderlineColor={Colors.primary}
+              underlineColor="transparent"
             />
             {nameError && (
               <HelperText type="error" visible={nameError}>
@@ -186,12 +186,12 @@ export default function GroupFormScreen() {
               label={t('payments.monthlyFee') || 'Monthly Fee (RSD)'}
               value={membershipFee}
               onChangeText={setMembershipFee}
-              mode="outlined"
+              mode="flat"
               keyboardType="numeric"
               disabled={isSaving}
               style={styles.input}
-              outlineColor={Colors.border}
-              activeOutlineColor={Colors.primary}
+              activeUnderlineColor={Colors.primary}
+              underlineColor="transparent"
             />
           </View>
 
