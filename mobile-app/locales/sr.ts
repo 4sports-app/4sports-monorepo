@@ -575,7 +575,7 @@ export default {
     share: 'Podeli',
     howToUse: 'Kako koristiti',
     step1: 'Preuzmite aplikaciju 4Sports',
-    step2: 'Unesite pozivnikod"',
+    step2: 'Unesite pozivnikod',
     step3: 'Unesite podatke i registrujte se',
     step4: 'Spremni ste za korišćenje!',
     joinClubMessage: 'Pridružite se našem klubu u aplikaciji 4Sports!',

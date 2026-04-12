@@ -703,7 +703,6 @@ const styles = StyleSheet.create({
   },
   equipmentChip: {
     backgroundColor: Colors.primary + '20',
-    height: 28,
   },
   equipmentChipText: {
     fontSize: FontSize.sm,

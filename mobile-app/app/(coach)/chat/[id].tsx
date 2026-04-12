@@ -13,6 +13,7 @@ import {
   ActivityIndicator,
   Modal,
   Dimensions,
+  AppState,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, Stack, router } from 'expo-router';
@@ -67,6 +68,17 @@ export default function ChatScreen() {
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
   const headerHeight = useHeaderHeight();
   const flatListRef = useRef<FlatList>();
+  const [kavKey, setKavKey] = useState(0);
+
+  // Force KeyboardAvoidingView remount when app returns from background
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') {
+        setKavKey((k) => k + 1);
+      }
+    });
+    return () => sub.remove();
+  }, []);
 
   const openImageModal = (imageUrl: string) => {
     setSelectedImageUrl(imageUrl);
@@ -359,6 +371,7 @@ export default function ChatScreen() {
       />
 
       <KeyboardAvoidingView
+        key={kavKey}
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={headerHeight}

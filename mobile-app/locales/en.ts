@@ -125,6 +125,9 @@ export default {
     selectMember: 'Please select a member.',
     selectGroup: 'Please select a group',
     endTimeAfterStart: 'End time must be after start time',
+    validAmount: 'Please enter a valid amount.',
+    enterContent: 'Please enter content for your post.',
+    contentMinLength: 'Post content must be at least 3 characters.',
     groupNameMin: 'Group name must be at least 3 characters',
   },
 
@@ -572,7 +575,7 @@ export default {
     share: 'Share',
     howToUse: 'How to use',
     step1: 'Download the 4Sports app',
-    step2: 'Enter the invite code"',
+    step2: 'Enter the invite code',
     step3: 'Enter your data and register',
     step4: 'You are ready to use the app!',
     joinClubMessage: 'Join our club on the 4Sports app!',

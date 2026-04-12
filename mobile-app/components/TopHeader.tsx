@@ -31,7 +31,10 @@ export default function TopHeader({ basePath }: TopHeaderProps) {
   useFocusEffect(
     useCallback(() => {
       refreshBadgeCount();
-    }, [refreshBadgeCount])
+      if (!clubInfo && user?.clubId) {
+        fetchClubInfo();
+      }
+    }, [refreshBadgeCount, clubInfo, user?.clubId])
   );
 
   const fetchClubInfo = async () => {
@@ -83,7 +86,7 @@ export default function TopHeader({ basePath }: TopHeaderProps) {
             )}
           </View>
           <Text style={styles.clubName} numberOfLines={1}>
-            {clubInfo?.name || 'Loading...'}
+            {clubInfo?.name || ''}
           </Text>
         </TouchableOpacity>
 

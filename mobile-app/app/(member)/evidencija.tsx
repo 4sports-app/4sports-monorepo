@@ -158,29 +158,13 @@ export default function EvidencijaScreen() {
 
     const now = new Date();
 
-    console.log('=== MONTHLY HISTORY GENERATION ===');
+    // Determine how many months back to show based on member's registration date
+    const memberSince = member?.createdAt ? new Date(member.createdAt) : null;
+    let monthsToGenerate = 1; // Default to current month only
 
-    // Find earliest payment to determine how many months back to go
-    const membershipPayments = payments.filter((p: Payment) => p.type === 'MEMBERSHIP');
-    let monthsToGenerate = 12; // Default to 12
-
-    if (membershipPayments.length > 0) {
-      // Sort by period or date to find earliest
-      const sortedPayments = [...membershipPayments].sort((a, b) => {
-        const aDate = a.period ? new Date(a.period.year, a.period.month - 1) : new Date(a.paidDate || a.createdAt);
-        const bDate = b.period ? new Date(b.period.year, b.period.month - 1) : new Date(b.paidDate || b.createdAt);
-        return aDate.getTime() - bDate.getTime();
-      });
-
-      const earliestPayment = sortedPayments[0];
-      const earliestDate = earliestPayment.period
-        ? new Date(earliestPayment.period.year, earliestPayment.period.month - 1)
-        : new Date(earliestPayment.paidDate || earliestPayment.createdAt);
-
-      const monthsDiff = (now.getFullYear() - earliestDate.getFullYear()) * 12 + (now.getMonth() - earliestDate.getMonth()) + 1;
-      monthsToGenerate = Math.max(12, monthsDiff);
-
-      console.log('Earliest payment:', earliestDate, 'Months to generate:', monthsToGenerate);
+    if (memberSince) {
+      const monthsDiff = (now.getFullYear() - memberSince.getFullYear()) * 12 + (now.getMonth() - memberSince.getMonth()) + 1;
+      monthsToGenerate = Math.max(1, monthsDiff);
     }
 
     // Generate all months from now back to earliest payment
