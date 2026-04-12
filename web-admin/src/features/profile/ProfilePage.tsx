@@ -517,50 +517,54 @@ function PaymentsTab({
   const stats = useMemo(() => {
     const fee = member.membershipFee || 3000;
     const now = new Date();
-    // Use club joinedAt date if available, otherwise use member createdAt
-    let joinDate = new Date(member.createdAt);
-    if (member.clubs && member.clubs.length > 0) {
-      const activeClub = member.clubs.find((c: any) => c.status === 'ACTIVE') || member.clubs[0];
-      if (activeClub?.joinedAt) {
-        joinDate = new Date(activeClub.joinedAt);
-      }
-    }
-    const monthsDiff = (now.getFullYear() - joinDate.getFullYear()) * 12 + (now.getMonth() - joinDate.getMonth()) + 1;
-    const totalMonths = Math.max(1, monthsDiff);
+    const currentMonth = now.getMonth() + 1;
+    const currentYear = now.getFullYear();
 
     const membershipPayments = payments.filter((p) => p.type === 'MEMBERSHIP');
+
+    // Check if there's already a payment record for current month
+    const hasCurrentMonth = membershipPayments.some(
+      (p) => p.period?.month === currentMonth && p.period?.year === currentYear
+    );
+
+    // Include current month in expected total even if no record exists
     const paidStatusPayments = membershipPayments.filter((p) => p.status === 'PAID' || p.status === 'PARTIAL');
     const totalPaid = paidStatusPayments.reduce((sum, p) => sum + (p.paidAmount ?? p.amount ?? 0), 0);
-    // Calculate totalExpected from actual payment amounts (with fallback to monthly fee if amount missing)
-    const totalExpected = membershipPayments.reduce((sum, p) => sum + (p.amount ?? fee), 0);
+    const totalExpectedFromRecords = membershipPayments.reduce((sum, p) => sum + (p.amount ?? fee), 0);
+    // Add current month fee if not already in records
+    const totalExpected = hasCurrentMonth ? totalExpectedFromRecords : totalExpectedFromRecords + fee;
     const debt = Math.max(0, totalExpected - totalPaid);
 
-    // Payment months = number of months with payment records
     const paymentMonths = membershipPayments.length;
 
-    console.log(`[PaymentsTab] Member: ${member.fullName}`, {
-      totalMonths,
-      paymentMonths,
-      fee,
-      totalExpected,
-      allPayments: payments.length,
-      membershipPayments: membershipPayments.length,
-      paidStatusPayments: paidStatusPayments.length,
-      totalPaid,
-      debt
-    });
-
-    return { fee: member.membershipFee || 3000, totalMonths, paymentMonths, totalPaid, debt };
+    return { fee, totalMonths: paymentMonths, paymentMonths, totalPaid, debt, hasCurrentMonth, currentMonth, currentYear };
   }, [member, payments]);
 
   const recentPayments = useMemo(() => {
-    return payments
+    const membershipPayments = payments
       .filter((p) => p.type === 'MEMBERSHIP' && p.period)
       .sort((a, b) => {
         if (!a.period || !b.period) return 0;
         return (b.period.year * 12 + b.period.month) - (a.period.year * 12 + a.period.month);
       });
-  }, [payments]);
+
+    // If no record for current month, prepend a virtual unpaid row
+    if (!stats.hasCurrentMonth) {
+      const virtualRow: MemberPayment = {
+        _id: '__virtual_current_month__',
+        type: 'MEMBERSHIP',
+        amount: stats.fee,
+        paidAmount: 0,
+        status: 'PENDING',
+        dueDate: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        period: { month: stats.currentMonth, year: stats.currentYear },
+      };
+      return [virtualRow, ...membershipPayments];
+    }
+
+    return membershipPayments;
+  }, [payments, stats]);
 
   const formatAmount = (amount: number) => new Intl.NumberFormat('sr-RS').format(amount);
 
