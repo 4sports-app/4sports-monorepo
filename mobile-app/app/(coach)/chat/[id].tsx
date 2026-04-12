@@ -17,6 +17,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, Stack, router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useHeaderHeight } from '@react-navigation/elements';
 import { Colors } from '@/constants/Colors';
 import { useAuth } from '@/services/AuthContext';
 import * as ImagePicker from 'expo-image-picker';
@@ -64,6 +65,7 @@ export default function ChatScreen() {
   const [sending, setSending] = useState(false);
   const [imageModalVisible, setImageModalVisible] = useState(false);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
+  const headerHeight = useHeaderHeight();
   const flatListRef = useRef<FlatList>();
 
   const openImageModal = (imageUrl: string) => {
@@ -356,7 +358,11 @@ export default function ChatScreen() {
         }}
       />
 
-      <View style={styles.container}>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={headerHeight}
+      >
         <FlatList
           ref={flatListRef}
           data={messages}
@@ -420,7 +426,7 @@ export default function ChatScreen() {
             )}
           </TouchableOpacity>
         </View>
-      </View>
+      </KeyboardAvoidingView>
 
       {/* Image Zoom Modal */}
       <Modal
