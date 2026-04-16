@@ -16,10 +16,11 @@ export default function CoachLayout() {
       <TopHeader basePath="/(coach)" />
       <Tabs
         initialRouteName="index"
-        backBehavior="initialRoute"
+        backBehavior="history"
         tabBar={(props) => <CustomTabBar {...props} />}
         screenOptions={{
           headerShown: false,
+          freezeOnBlur: true,
         }}
       >
         {/* Tab 1: Evidencija */}

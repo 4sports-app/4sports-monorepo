@@ -125,6 +125,9 @@ export default {
     selectMember: 'Please select a member.',
     selectGroup: 'Please select a group',
     endTimeAfterStart: 'End time must be after start time',
+    validAmount: 'Please enter a valid amount.',
+    enterContent: 'Please enter content for your post.',
+    contentMinLength: 'Post content must be at least 3 characters.',
     groupNameMin: 'Group name must be at least 3 characters',
   },
 
@@ -364,6 +367,11 @@ export default {
     addEquipment: 'Add equipment',
     addNewEquipment: 'Add new equipment',
     newEquipment: 'New equipment',
+    searchLocation: 'Search location...',
+    previousLocations: 'Previous locations',
+    selectGroupRequired: 'Please select a group',
+    endTimeAfterStart: 'End time must be after start time',
+    locationRequired: 'Location is required',
   },
 
   // Attendance
@@ -567,7 +575,7 @@ export default {
     share: 'Share',
     howToUse: 'How to use',
     step1: 'Download the 4Sports app',
-    step2: 'Enter the invite code"',
+    step2: 'Enter the invite code',
     step3: 'Enter your data and register',
     step4: 'You are ready to use the app!',
     joinClubMessage: 'Join our club on the 4Sports app!',
@@ -622,6 +630,13 @@ export default {
     pushNotifications: 'Push Notifications',
     emailNotifications: 'Email Notifications',
     helpSupport: 'Help & Support',
+    changePassword: 'Change Password',
+    changePasswordDescription: 'Enter your current password and choose a new password for your account.',
+    currentPassword: 'Current Password',
+    newPassword: 'New Password',
+    confirmPassword: 'Confirm New Password',
+    passwordChanged: 'Password changed successfully',
+    samePassword: 'New password must be different from current',
     about: 'About',
     version: 'Version',
     switchAccount: 'Switch Account',
@@ -706,6 +721,8 @@ export default {
     noEventsOnDate: 'No events on this date',
     eventsOn: 'Events on {{date}}',
     loadingCalendar: 'Loading calendar...',
+    myEvents: 'Mine',
+    allCoaches: 'All coaches',
   },
 
   // Empty States

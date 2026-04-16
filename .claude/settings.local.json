@@ -46,7 +46,9 @@
       "Bash(npx expo export:*)",
       "Bash(git -C \"C:/Users/Nemanja/Desktop/4sports-monorepo\" show f0b1758 --stat)",
       "Bash(node -e:*)",
-      "Bash(npm run seed:members:*)"
+      "Bash(npm run seed:members:*)",
+      "Bash(grep -E \"\\\\.\\(tsx|ts|jsx|js\\)$\")",
+      "Bash(xargs grep:*)"
     ],
     "deny": [],
     "ask": []

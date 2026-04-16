@@ -159,7 +159,7 @@ export default function NotificationsScreen() {
     if (diffMins < 60) return `${diffMins} min`;
     if (diffHours < 24) return `${diffHours}h`;
     if (diffDays < 7) return `${diffDays}d`;
-    return date.toLocaleDateString('sr-RS');
+    return date.toLocaleDateString('en-GB');
   };
 
   const renderNotification = ({ item }: { item: Notification }) => {
@@ -368,6 +368,7 @@ const styles = StyleSheet.create({
   },
   list: {
     padding: Spacing.md,
+    paddingBottom: 100,
   },
   notificationCard: {
     flexDirection: 'row',

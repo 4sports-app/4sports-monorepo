@@ -136,6 +136,12 @@ export interface Event {
   startTime: string;
   endTime: string;
   location?: string;
+  locationCoords?: {
+    lat: number;
+    lng: number;
+    placeId?: string;
+    address?: string;
+  };
   createdBy: string | { _id: string; fullName: string };
   isMandatory?: boolean;
   status: 'SCHEDULED' | 'CANCELLED' | 'COMPLETED';

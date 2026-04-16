@@ -10,13 +10,20 @@ import { useLanguage } from '@/services/LanguageContext';
 import api from '@/services/api';
 
 interface ClubInfo {
-  _id: string;
   name: string;
   logo?: string;
   address?: string;
   phoneNumber?: string;
   email?: string;
   description?: string;
+  website?: string;
+  facebook?: string;
+  instagram?: string;
+  twitter?: string;
+  foundedYear?: string;
+  stadium?: string;
+  history?: string;
+  achievements?: string;
 }
 
 interface CoachInfo {
@@ -39,19 +46,31 @@ export default function ClubInfoScreen() {
 
   const fetchClubData = useCallback(async () => {
     if (!user?.clubId) return;
-
     try {
-      const clubResponse = await api.get(`/clubs/${user.clubId}`);
-      setClubInfo(clubResponse.data.data);
-
-      const usersResponse = await api.get('/chat/users');
-      const users = usersResponse.data.data || [];
-
-      const ownerUser = users.find((u: CoachInfo) => u.role === 'OWNER');
-      const coachUsers = users.filter((u: CoachInfo) => u.role === 'COACH');
-
-      setOwner(ownerUser || null);
-      setCoaches(coachUsers);
+      const [settingsRes, usersRes] = await Promise.all([
+        api.get('/settings/club'),
+        api.get('/chat/users'),
+      ]);
+      const settings = settingsRes.data.data;
+      setClubInfo({
+        name: settings.name || settings.clubName || '',
+        logo: settings.logoUrl || settings.logo || '',
+        address: settings.address,
+        phoneNumber: settings.phoneNumber,
+        email: settings.email,
+        description: settings.description,
+        website: settings.website,
+        facebook: settings.facebook,
+        instagram: settings.instagram,
+        twitter: settings.twitter,
+        foundedYear: settings.foundedYear,
+        stadium: settings.stadium,
+        history: settings.history,
+        achievements: settings.achievements,
+      });
+      const users = usersRes.data.data || [];
+      setOwner(users.find((u: CoachInfo) => u.role === 'OWNER') || null);
+      setCoaches(users.filter((u: CoachInfo) => u.role === 'COACH'));
     } catch (error) {
       console.error('Error fetching club data:', error);
     } finally {
@@ -60,39 +79,35 @@ export default function ClubInfoScreen() {
     }
   }, [user?.clubId]);
 
-  useEffect(() => {
-    fetchClubData();
-  }, [fetchClubData]);
-
-  const onRefresh = () => {
-    setIsRefreshing(true);
-    fetchClubData();
-  };
+  useEffect(() => { fetchClubData(); }, [fetchClubData]);
+  const onRefresh = () => { setIsRefreshing(true); fetchClubData(); };
 
   const getInitials = (name?: string) => {
     if (!name) return '??';
     return name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
-  const handleCall = (phoneNumber?: string) => {
-    if (phoneNumber) Linking.openURL(`tel:${phoneNumber}`);
-  };
-
-  const handleEmail = (email?: string) => {
-    if (email) Linking.openURL(`mailto:${email}`);
+  const handleCall = (phoneNumber?: string) => { if (phoneNumber) Linking.openURL(`tel:${phoneNumber}`); };
+  const handleEmail = (email?: string) => { if (email) Linking.openURL(`mailto:${email}`); };
+  const handleLink = (url?: string) => {
+    if (url) {
+      const fullUrl = url.startsWith('http') ? url : `https://${url}`;
+      Linking.openURL(fullUrl);
+    }
   };
 
   const handleChatWithUser = async (userId: string) => {
     try {
-      const response = await api.post('/chat/conversations', {
-        participantIds: [userId],
-      });
+      const response = await api.post('/chat/conversations', { participantIds: [userId] });
       const conversationId = response.data.data.conversationId || response.data.data._id;
       router.push(`/(member)/chat/${conversationId}` as any);
     } catch (error) {
       console.error('Error starting chat:', error);
     }
   };
+
+  const hasSocials = clubInfo?.website || clubInfo?.facebook || clubInfo?.instagram || clubInfo?.twitter;
+  const hasExtra = clubInfo?.foundedYear || clubInfo?.stadium;
 
   const renderPersonCard = (person: CoachInfo, isOwner: boolean = false) => (
     <Card key={person._id} style={styles.personCard}>
@@ -101,27 +116,18 @@ export default function ClubInfoScreen() {
           {person.profileImage ? (
             <Image source={{ uri: person.profileImage }} style={styles.personAvatar} />
           ) : (
-            <Avatar.Text
-              size={56}
-              label={getInitials(person.fullName)}
-              style={[styles.avatarPlaceholder, isOwner && styles.ownerAvatar]}
-            />
+            <Avatar.Text size={56} label={getInitials(person.fullName)} style={[styles.avatarPlaceholder, isOwner && styles.ownerAvatar]} />
           )}
           <View style={styles.personInfo}>
             <Text style={styles.personName}>{person.fullName}</Text>
             <View style={styles.roleBadge}>
-              <MaterialCommunityIcons
-                name={isOwner ? 'crown' : 'whistle'}
-                size={14}
-                color={isOwner ? Colors.warning : Colors.primary}
-              />
+              <MaterialCommunityIcons name={isOwner ? 'crown' : 'whistle'} size={14} color={isOwner ? Colors.warning : Colors.primary} />
               <Text style={[styles.roleText, isOwner && styles.ownerRoleText]}>
                 {isOwner ? t('roles.owner') : t('roles.coach')}
               </Text>
             </View>
           </View>
         </View>
-
         <View style={styles.contactSection}>
           {person.email && (
             <TouchableOpacity style={styles.contactRow} onPress={() => handleEmail(person.email)}>
@@ -136,7 +142,6 @@ export default function ClubInfoScreen() {
             </TouchableOpacity>
           )}
         </View>
-
         <TouchableOpacity style={styles.chatButton} onPress={() => handleChatWithUser(person._id)}>
           <MaterialCommunityIcons name="chat-outline" size={20} color={Colors.primary} />
           <Text style={styles.chatButtonText}>{t('chat.startChat') || 'Chat'}</Text>
@@ -160,24 +165,22 @@ export default function ClubInfoScreen() {
       contentContainerStyle={styles.content}
       refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={[Colors.primary]} />}
     >
+      {/* Club Header */}
       <Card style={styles.clubCard}>
         <Card.Content style={styles.clubContent}>
-          <View style={styles.clubHeader}>
-            <View style={styles.clubLogo}>
-              {clubInfo?.logo ? (
-                <Image source={{ uri: clubInfo.logo }} style={styles.logoImage} />
-              ) : (
-                <MaterialCommunityIcons name="shield-outline" size={32} color={Colors.primary} />
-              )}
-            </View>
-            <View style={styles.clubInfo}>
-              <Text style={styles.clubName}>{clubInfo?.name || t('profile.club')}</Text>
-              {clubInfo?.description && <Text style={styles.clubDescription}>{clubInfo.description}</Text>}
-            </View>
+          <View style={styles.clubLogo}>
+            {clubInfo?.logo ? (
+              <Image source={{ uri: clubInfo.logo }} style={styles.logoImage} />
+            ) : (
+              <MaterialCommunityIcons name="shield-outline" size={48} color={Colors.primary} />
+            )}
           </View>
+          <Text style={styles.clubName}>{clubInfo?.name}</Text>
+          {clubInfo?.description ? <Text style={styles.clubDescription}>{clubInfo.description}</Text> : null}
         </Card.Content>
       </Card>
 
+      {/* Contact Info */}
       {(clubInfo?.address || clubInfo?.phoneNumber || clubInfo?.email) && (
         <Card style={styles.infoCard}>
           <Card.Content>
@@ -204,6 +207,81 @@ export default function ClubInfoScreen() {
         </Card>
       )}
 
+      {/* Club Details */}
+      {hasExtra && (
+        <Card style={styles.infoCard}>
+          <Card.Content>
+            <Text style={styles.sectionTitle}>{t('profile.clubDetails') || 'Detalji kluba'}</Text>
+            {clubInfo?.foundedYear && (
+              <View style={styles.infoRow}>
+                <MaterialCommunityIcons name="calendar-star" size={20} color={Colors.textSecondary} />
+                <Text style={styles.infoText}>{t('profile.founded') || 'Osnovano'}: {clubInfo.foundedYear}</Text>
+              </View>
+            )}
+            {clubInfo?.stadium && (
+              <View style={styles.infoRow}>
+                <MaterialCommunityIcons name="stadium-outline" size={20} color={Colors.textSecondary} />
+                <Text style={styles.infoText}>{clubInfo.stadium}</Text>
+              </View>
+            )}
+          </Card.Content>
+        </Card>
+      )}
+
+      {/* Social & Web Links */}
+      {hasSocials && (
+        <Card style={styles.infoCard}>
+          <Card.Content>
+            <Text style={styles.sectionTitle}>{t('profile.links') || 'Linkovi'}</Text>
+            {clubInfo?.website && (
+              <TouchableOpacity style={styles.infoRow} onPress={() => handleLink(clubInfo.website)}>
+                <MaterialCommunityIcons name="web" size={20} color={Colors.textSecondary} />
+                <Text style={[styles.infoText, styles.linkText]}>{clubInfo.website}</Text>
+              </TouchableOpacity>
+            )}
+            {clubInfo?.facebook && (
+              <TouchableOpacity style={styles.infoRow} onPress={() => handleLink(clubInfo.facebook)}>
+                <MaterialCommunityIcons name="facebook" size={20} color="#1877F2" />
+                <Text style={[styles.infoText, styles.linkText]}>{clubInfo.facebook}</Text>
+              </TouchableOpacity>
+            )}
+            {clubInfo?.instagram && (
+              <TouchableOpacity style={styles.infoRow} onPress={() => handleLink(clubInfo.instagram)}>
+                <MaterialCommunityIcons name="instagram" size={20} color="#E4405F" />
+                <Text style={[styles.infoText, styles.linkText]}>{clubInfo.instagram}</Text>
+              </TouchableOpacity>
+            )}
+            {clubInfo?.twitter && (
+              <TouchableOpacity style={styles.infoRow} onPress={() => handleLink(clubInfo.twitter)}>
+                <MaterialCommunityIcons name="twitter" size={20} color="#1DA1F2" />
+                <Text style={[styles.infoText, styles.linkText]}>{clubInfo.twitter}</Text>
+              </TouchableOpacity>
+            )}
+          </Card.Content>
+        </Card>
+      )}
+
+      {/* History */}
+      {clubInfo?.history && (
+        <Card style={styles.infoCard}>
+          <Card.Content>
+            <Text style={styles.sectionTitle}>{t('profile.history') || 'Istorija'}</Text>
+            <Text style={styles.bodyText}>{clubInfo.history}</Text>
+          </Card.Content>
+        </Card>
+      )}
+
+      {/* Achievements */}
+      {clubInfo?.achievements && (
+        <Card style={styles.infoCard}>
+          <Card.Content>
+            <Text style={styles.sectionTitle}>{t('profile.achievements') || 'Dostignuća'}</Text>
+            <Text style={styles.bodyText}>{clubInfo.achievements}</Text>
+          </Card.Content>
+        </Card>
+      )}
+
+      {/* Owner */}
       {owner && (
         <View style={styles.section}>
           <Text style={styles.sectionHeader}>{t('roles.owner')}</Text>
@@ -211,6 +289,7 @@ export default function ClubInfoScreen() {
         </View>
       )}
 
+      {/* Coaches */}
       {coaches.length > 0 && (
         <View style={styles.section}>
           <Text style={styles.sectionHeader}>{t('roles.coach')}s ({coaches.length})</Text>
@@ -223,22 +302,21 @@ export default function ClubInfoScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
-  content: { padding: Spacing.md, paddingBottom: Spacing.xxl },
+  content: { padding: Spacing.md, paddingBottom: 120 },
   centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.background },
   loadingText: { fontSize: FontSize.md, color: Colors.textSecondary, marginTop: Spacing.md },
   clubCard: { backgroundColor: Colors.surface, marginBottom: Spacing.md },
-  clubContent: { paddingVertical: Spacing.sm },
-  clubHeader: { flexDirection: 'row', alignItems: 'flex-start' },
-  clubLogo: { width: 64, height: 64, borderRadius: BorderRadius.md, backgroundColor: Colors.background, justifyContent: 'center', alignItems: 'center', marginRight: Spacing.md },
-  logoImage: { width: 64, height: 64, borderRadius: BorderRadius.md },
-  clubInfo: { flex: 1 },
-  clubName: { fontSize: FontSize.lg, fontWeight: 'bold', color: Colors.text },
-  clubDescription: { fontSize: FontSize.sm, color: Colors.textSecondary, marginTop: Spacing.xs },
+  clubContent: { alignItems: 'center', paddingVertical: Spacing.lg },
+  clubLogo: { width: 96, height: 96, borderRadius: BorderRadius.lg, backgroundColor: Colors.background, justifyContent: 'center', alignItems: 'center', marginBottom: Spacing.md },
+  logoImage: { width: 96, height: 96, borderRadius: BorderRadius.lg },
+  clubName: { fontSize: FontSize.xxl, fontWeight: 'bold', color: Colors.text, textAlign: 'center' },
+  clubDescription: { fontSize: FontSize.md, color: Colors.textSecondary, textAlign: 'center', marginTop: Spacing.sm, paddingHorizontal: Spacing.lg },
   infoCard: { backgroundColor: Colors.surface, marginBottom: Spacing.md },
   sectionTitle: { fontSize: FontSize.sm, fontWeight: '600', color: Colors.textSecondary, marginBottom: Spacing.md, textTransform: 'uppercase', letterSpacing: 0.5 },
   infoRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: Spacing.sm, gap: Spacing.md },
   infoText: { fontSize: FontSize.md, color: Colors.text, flex: 1 },
   linkText: { color: Colors.primary },
+  bodyText: { fontSize: FontSize.md, color: Colors.text, lineHeight: 22 },
   section: { marginBottom: Spacing.md },
   sectionHeader: { fontSize: FontSize.lg, fontWeight: '600', color: Colors.text, marginBottom: Spacing.sm, marginLeft: Spacing.xs },
   personCard: { backgroundColor: Colors.surface, marginBottom: Spacing.sm },

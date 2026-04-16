@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import Attendance from '../models/Attendance';
 import Event from '../models/Event';
 import Member from '../models/Member';
+import Notification from '../models/Notification';
 
 export const markAttendance = async (req: Request, res: Response) => {
   try {
@@ -20,6 +21,31 @@ export const markAttendance = async (req: Request, res: Response) => {
       { status, markedBy: req.user._id, markedAt: new Date(), notes },
       { new: true, upsert: true }
     ).populate('memberId', 'fullName');
+
+    // Notify member when marked PRESENT or LATE
+    if (status === 'PRESENT' || status === 'LATE') {
+      try {
+        const member = await Member.findById(memberId).select('parentId userId fullName');
+        if (member) {
+          const recipientId = member.userId || member.parentId;
+          if (recipientId) {
+            await Notification.createNotification({
+              clubId: event.clubId,
+              recipientId,
+              senderId: req.user._id,
+              type: 'ATTENDANCE_MARKED',
+              title: 'Prisustvo evidentirano',
+              message: `${member.fullName} je evidentiran/a kao ${status === 'PRESENT' ? 'prisutan/na' : 'kasni'} za ${event.title}.`,
+              data: { eventId, memberId },
+              deliveryMethods: ['IN_APP', 'PUSH'],
+              priority: 'MEDIUM',
+            });
+          }
+        }
+      } catch (notifError) {
+        console.error('Failed to send attendance notification:', notifError);
+      }
+    }
 
     return res.status(200).json({ success: true, data: attendance });
   } catch (error: any) {
@@ -245,6 +271,36 @@ export const bulkMarkAttendance = async (req: Request, res: Response) => {
     }));
 
     await Attendance.bulkWrite(bulkOps);
+
+    // Notify members marked PRESENT or LATE
+    try {
+      const presentAttendances = attendances.filter(
+        (att: any) => att.status === 'PRESENT' || att.status === 'LATE'
+      );
+      if (presentAttendances.length > 0) {
+        const memberIds = presentAttendances.map((att: any) => att.memberId);
+        const members = await Member.find({ _id: { $in: memberIds } }).select('parentId userId fullName');
+
+        for (const member of members) {
+          const recipientId = member.userId || member.parentId;
+          if (!recipientId) continue;
+          const att = presentAttendances.find((a: any) => a.memberId === member._id.toString());
+          await Notification.createNotification({
+            clubId: event.clubId,
+            recipientId,
+            senderId: req.user!._id,
+            type: 'ATTENDANCE_MARKED',
+            title: 'Prisustvo evidentirano',
+            message: `${member.fullName} je evidentiran/a kao ${att?.status === 'LATE' ? 'kasni' : 'prisutan/na'} za ${event.title}.`,
+            data: { eventId, memberId: member._id.toString() },
+            deliveryMethods: ['IN_APP', 'PUSH'],
+            priority: 'MEDIUM',
+          });
+        }
+      }
+    } catch (notifError) {
+      console.error('Failed to send bulk attendance notifications:', notifError);
+    }
 
     return res.status(200).json({ success: true, message: 'Attendance marked successfully' });
   } catch (error: any) {

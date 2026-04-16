@@ -265,7 +265,7 @@ export default function CommentBottomSheet({
     if (diffMins < 60) return `${diffMins}${t('time.minutesShort') || 'm'}`;
     if (diffHours < 24) return `${diffHours}${t('time.hoursShort') || 'h'}`;
     if (diffDays < 7) return `${diffDays}${t('time.daysShort') || 'd'}`;
-    return date.toLocaleDateString();
+    return date.toLocaleDateString('en-GB');
   };
 
   const renderComment = ({ item }: { item: Comment }) => {

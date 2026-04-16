@@ -52,11 +52,11 @@ export const createEvent = async (req: Request, res: Response) => {
   try {
     if (!req.user) return res.status(401).json({ success: false, error: { code: 'UNAUTHORIZED', message: 'Authentication required' } });
 
-    const { groupId, title, description, type, startTime, endTime, location, isMandatory, notes, equipment, maxParticipants, isRecurring, recurringPattern } = req.body;
+    const { groupId, title, description, type, startTime, endTime, location, locationCoords, isMandatory, notes, equipment, maxParticipants, isRecurring, recurringPattern } = req.body;
     const clubId = req.user.clubId;
 
     if (!clubId) return res.status(403).json({ success: false, error: { code: 'FORBIDDEN', message: 'You must be associated with a club' } });
-    if (!groupId || !title || !type || !startTime || !endTime) return res.status(400).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'Missing required fields' } });
+    if (!groupId || !title || !type || !startTime || !endTime || !location) return res.status(400).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'Missing required fields' } });
 
     const group = await Group.findById(groupId);
     if (!group || group.clubId.toString() !== clubId.toString()) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Group not found' } });
@@ -70,6 +70,7 @@ export const createEvent = async (req: Request, res: Response) => {
       startTime,
       endTime,
       location,
+      locationCoords,
       isMandatory,
       notes,
       equipment,
@@ -104,6 +105,7 @@ export const createEvent = async (req: Request, res: Response) => {
               startTime: o.startTime,
               endTime: o.endTime,
               location,
+              locationCoords,
               isMandatory,
               notes,
               equipment,
@@ -200,7 +202,7 @@ export const updateEvent = async (req: Request, res: Response) => {
     if (!req.user) return res.status(401).json({ success: false, error: { code: 'UNAUTHORIZED', message: 'Authentication required' } });
 
     const { id } = req.params;
-    const { title, description, type, startTime, endTime, location, isMandatory, status, notes, equipment, maxParticipants } = req.body;
+    const { title, description, type, startTime, endTime, location, locationCoords, isMandatory, status, notes, equipment, maxParticipants } = req.body;
 
     const event = await Event.findById(id);
     if (!event) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Event not found' } });
@@ -212,6 +214,7 @@ export const updateEvent = async (req: Request, res: Response) => {
     if (startTime) event.startTime = startTime;
     if (endTime) event.endTime = endTime;
     if (location !== undefined) event.location = location;
+    if (locationCoords !== undefined) event.locationCoords = locationCoords;
     if (isMandatory !== undefined) event.isMandatory = isMandatory;
     if (status) event.status = status;
     if (notes !== undefined) event.notes = notes;
@@ -442,6 +445,28 @@ export const qrCheckin = async (req: Request, res: Response) => {
       },
       { new: true, upsert: true }
     );
+
+    // Notify member about check-in
+    try {
+      const member = await Member.findById(memberId).select('parentId userId fullName');
+      if (member) {
+        const recipientId = member.userId || member.parentId;
+        if (recipientId) {
+          await Notification.createNotification({
+            clubId: event.clubId,
+            recipientId,
+            type: 'ATTENDANCE_MARKED',
+            title: 'Prisustvo evidentirano',
+            message: `${member.fullName} je čekiran/a za ${event.title}.`,
+            data: { eventId: event._id, memberId },
+            deliveryMethods: ['IN_APP', 'PUSH'],
+            priority: 'MEDIUM',
+          });
+        }
+      }
+    } catch (notifError) {
+      console.error('Failed to send QR checkin notification:', notifError);
+    }
 
     return res.status(200).json({
       success: true,

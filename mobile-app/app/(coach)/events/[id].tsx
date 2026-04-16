@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { View, StyleSheet, ScrollView, RefreshControl, Alert, TouchableOpacity, Modal } from 'react-native';
+import { View, StyleSheet, ScrollView, RefreshControl, Alert, TouchableOpacity, Modal, BackHandler, Linking } from 'react-native';
 import { Text, Card, ActivityIndicator, Avatar, IconButton, FAB } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
@@ -78,6 +78,18 @@ export default function EventDetailScreen() {
     }, [fetchParticipants])
   );
 
+  // Intercept hardware back button to go to calendar
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        router.navigate('/(coach)/calendar' as any);
+        return true;
+      };
+      const sub = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      return () => sub.remove();
+    }, [])
+  );
+
   const onRefresh = () => {
     setIsRefreshing(true);
     loadData();
@@ -96,6 +108,22 @@ export default function EventDetailScreen() {
     if (!event?.groupId) return t('common.unknown');
     if (typeof event.groupId === 'string') return t('events.group');
     return event.groupId.name;
+  };
+
+  const openInMaps = async (label?: string, coords?: { lat: number; lng: number; placeId?: string }) => {
+    try {
+      let url: string;
+      if (coords?.lat != null && coords?.lng != null) {
+        url = `https://www.google.com/maps/dir/?api=1&destination=${coords.lat},${coords.lng}`;
+      } else if (label) {
+        url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(label)}`;
+      } else {
+        return;
+      }
+      await Linking.openURL(url);
+    } catch (e) {
+      console.warn('Open maps error:', e);
+    }
   };
 
   const handleShowQRCode = () => {
@@ -212,7 +240,7 @@ export default function EventDetailScreen() {
     <View style={styles.container}>
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <TouchableOpacity onPress={() => router.navigate('/(coach)/calendar' as any)} style={styles.backButton}>
           <MaterialCommunityIcons name="arrow-left" size={24} color={Colors.text} />
         </TouchableOpacity>
 
@@ -289,13 +317,18 @@ export default function EventDetailScreen() {
             {event.location && (
               <Card style={styles.card}>
                 <Card.Content>
-                  <View style={styles.infoRow}>
+                  <TouchableOpacity
+                    style={styles.infoRow}
+                    onPress={() => openInMaps(event.location, event.locationCoords)}
+                    activeOpacity={0.7}
+                  >
                     <MaterialCommunityIcons name="map-marker" size={24} color={Colors.primary} />
                     <View style={styles.infoContent}>
                       <Text style={styles.infoLabel}>{t('events.location')}</Text>
-                      <Text style={styles.infoValue}>{event.location}</Text>
+                      <Text style={[styles.infoValue, { color: Colors.primary }]}>{event.location}</Text>
                     </View>
-                  </View>
+                    <MaterialCommunityIcons name="open-in-new" size={20} color={Colors.textSecondary} />
+                  </TouchableOpacity>
                 </Card.Content>
               </Card>
             )}

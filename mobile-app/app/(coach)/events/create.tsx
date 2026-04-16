@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet, ScrollView, Alert, Platform, TouchableOpacity, LayoutAnimation, UIManager } from 'react-native';
 import { Text, TextInput, Button, ActivityIndicator, Switch, IconButton } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -10,6 +10,7 @@ import { Colors } from '@/constants/Colors';
 import { Spacing, BorderRadius, FontSize } from '@/constants/Layout';
 import { useLanguage } from '@/services/LanguageContext';
 import DropdownMenu from '@/components/DropdownMenu';
+import LocationPicker, { LocationValue } from '@/components/LocationPicker';
 import api from '@/services/api';
 import { Group } from '@/types';
 
@@ -21,9 +22,15 @@ const SAVED_LOCATIONS_KEY = '@saved_locations';
 const SAVED_EVENT_TYPES_KEY = '@saved_event_types';
 const SAVED_EQUIPMENT_KEY = '@saved_equipment';
 
+const EVENT_TYPE_COLOR_PALETTE = [
+  '#1DDD63', '#ff9800', '#2196f3', '#f44336',
+  '#9c27b0', '#009688', '#e91e63', '#ffc107',
+  '#3f51b5', '#00bcd4',
+];
+
 const DEFAULT_EVENT_TYPES = [
-  { id: 'TRAINING', label: 'Trening' },
-  { id: 'MATCH', label: 'Utakmica' },
+  { id: 'TRAINING', label: 'Trening', color: '#1DDD63' },
+  { id: 'MATCH', label: 'Utakmica', color: '#ff9800' },
 ];
 
 export default function CreateEventScreen() {
@@ -60,17 +67,18 @@ export default function CreateEventScreen() {
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [location, setLocation] = useState('');
+  const [locationValue, setLocationValue] = useState<LocationValue | null>(null);
   const [equipment, setEquipment] = useState<string[]>([]);
   const [newEquipment, setNewEquipment] = useState('');
 
   // Data
   const [groups, setGroups] = useState<Group[]>([]);
-  const [savedLocations, setSavedLocations] = useState<string[]>([]);
+  const [savedLocations, setSavedLocations] = useState<LocationValue[]>([]);
   const [eventTypes, setEventTypes] = useState(DEFAULT_EVENT_TYPES);
   const [savedEquipment, setSavedEquipment] = useState<string[]>([]);
   const [newLocation, setNewLocation] = useState('');
   const [newEventType, setNewEventType] = useState('');
+  const [newEventTypeColor, setNewEventTypeColor] = useState(EVENT_TYPE_COLOR_PALETTE[2]);
 
   // Menus
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
@@ -87,6 +95,9 @@ export default function CreateEventScreen() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingGroups, setIsLoadingGroups] = useState(true);
+
+  const scrollViewRef = useRef<ScrollView>(null);
+  const locationY = useRef(0);
 
   useEffect(() => {
     fetchGroups();
@@ -109,10 +120,18 @@ export default function CreateEventScreen() {
       ]);
 
       if (locationsJson) {
-        setSavedLocations(JSON.parse(locationsJson));
+        const parsed = JSON.parse(locationsJson);
+        // Backward compat: if items are strings, convert to objects
+        const normalized: LocationValue[] = (Array.isArray(parsed) ? parsed : []).map((item: any) =>
+          typeof item === 'string' ? { name: item } : item
+        );
+        setSavedLocations(normalized);
       }
       if (typesJson) {
-        const savedTypes = JSON.parse(typesJson);
+        const savedTypes = JSON.parse(typesJson).map((t: any) => ({
+          ...t,
+          color: t.color || EVENT_TYPE_COLOR_PALETTE[2],
+        }));
         setEventTypes([...DEFAULT_EVENT_TYPES, ...savedTypes]);
       }
       if (equipmentJson) {
@@ -123,21 +142,26 @@ export default function CreateEventScreen() {
     }
   };
 
-  const saveLocation = async (loc: string) => {
-    if (!loc.trim() || savedLocations.includes(loc.trim())) return;
+  const saveLocation = async (loc: LocationValue) => {
+    if (!loc?.name?.trim()) return;
+    const exists = savedLocations.some(l =>
+      (l.placeId && loc.placeId && l.placeId === loc.placeId) ||
+      l.name.trim().toLowerCase() === loc.name.trim().toLowerCase()
+    );
+    if (exists) return;
 
-    const newLocations = [...savedLocations, loc.trim()];
+    const newLocations = [...savedLocations, loc];
     setSavedLocations(newLocations);
     await AsyncStorage.setItem(SAVED_LOCATIONS_KEY, JSON.stringify(newLocations));
   };
 
-  const saveEventType = async (type: string) => {
+  const saveEventType = async (type: string, color: string) => {
     if (!type.trim()) return;
 
     const typeId = type.trim().toUpperCase().replace(/\s+/g, '_');
     if (eventTypes.some(t => t.id === typeId)) return;
 
-    const newType = { id: typeId, label: type.trim() };
+    const newType = { id: typeId, label: type.trim(), color };
     const customTypes = eventTypes.filter(t => !DEFAULT_EVENT_TYPES.some(d => d.id === t.id));
     const newCustomTypes = [...customTypes, newType];
 
@@ -224,11 +248,15 @@ export default function CreateEventScreen() {
 
   const validateForm = (): boolean => {
     if (!selectedGroupId) {
-      Alert.alert(t('common.error'), 'Izaberite grupu');
+      Alert.alert(t('common.error'), t('events.selectGroupRequired'));
       return false;
     }
     if (startTime >= endTime) {
-      Alert.alert(t('common.error'), 'Vreme završetka mora biti posle vremena početka');
+      Alert.alert(t('common.error'), t('events.endTimeAfterStart'));
+      return false;
+    }
+    if (!locationValue?.name?.trim()) {
+      Alert.alert(t('common.error'), t('events.locationRequired'));
       return false;
     }
     return true;
@@ -240,9 +268,9 @@ export default function CreateEventScreen() {
     setIsLoading(true);
 
     try {
-      // Save location if new
-      if (location.trim() && !savedLocations.includes(location.trim())) {
-        await saveLocation(location.trim());
+      // Save location to history if new
+      if (locationValue) {
+        await saveLocation(locationValue);
       }
 
       const startDateTime = new Date(date);
@@ -261,7 +289,15 @@ export default function CreateEventScreen() {
         groupId: selectedGroupId,
         startTime: startDateTime.toISOString(),
         endTime: endDateTime.toISOString(),
-        location: location.trim() || undefined,
+        location: locationValue?.address || locationValue?.name || '',
+        locationCoords: locationValue && locationValue.lat != null && locationValue.lng != null
+          ? {
+              lat: locationValue.lat,
+              lng: locationValue.lng,
+              placeId: locationValue.placeId,
+              address: locationValue.address,
+            }
+          : undefined,
         equipment: equipment.length > 0 ? equipment : undefined,
         isMandatory: true,
       };
@@ -318,7 +354,7 @@ export default function CreateEventScreen() {
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView ref={scrollViewRef} contentContainerStyle={styles.content}>
         {/* Event Type Dropdown */}
         <Text style={styles.label}>{t('events.eventType')} *</Text>
       <DropdownMenu
@@ -336,14 +372,22 @@ export default function CreateEventScreen() {
             key: type.id,
             title: type.label,
             selected: eventType === type.id,
+            icon: 'circle',
+            iconColor: (type as any).color,
           })),
-          { key: '__add_new__', title: '+ Dodaj novi tip', titleColor: Colors.primary },
+          { key: '__add_new__', title: `+ ${t('events.addNewType')}`, titleColor: Colors.primary },
         ]}
         anchor={
           <TouchableOpacity
             style={styles.dropdownButton}
             onPress={() => setActiveMenu('eventType')}
           >
+            {(() => {
+              const selectedType = eventTypes.find(t => t.id === eventType) as any;
+              return selectedType?.color ? (
+                <View style={[styles.typeColorDot, { backgroundColor: selectedType.color }]} />
+              ) : null;
+            })()}
             <Text style={styles.dropdownText}>{getSelectedEventTypeName()}</Text>
             <MaterialCommunityIcons name="chevron-down" size={24} color={Colors.textSecondary} />
           </TouchableOpacity>
@@ -352,46 +396,59 @@ export default function CreateEventScreen() {
 
       {/* Add new event type */}
       {showAddEventType && (
-        <View style={styles.addNewRow}>
-          <TextInput
-            value={newEventType}
-            onChangeText={setNewEventType}
-            placeholder="Novi tip događaja"
-            mode="outlined"
-            style={styles.addNewInput}
-            outlineColor={Colors.border}
-            activeOutlineColor={Colors.primary}
-            dense
-          />
-          <IconButton
-            icon="check"
-            mode="contained"
-            containerColor={Colors.primary}
-            iconColor="#fff"
-            size={20}
-            onPress={async () => {
-              if (newEventType.trim()) {
-                await saveEventType(newEventType);
-                const typeId = newEventType.trim().toUpperCase().replace(/\s+/g, '_');
-                setEventType(typeId);
+        <View>
+          <View style={styles.addNewRow}>
+            <TextInput
+              value={newEventType}
+              onChangeText={setNewEventType}
+              placeholder={t('events.newEventType')}
+              mode="flat"
+              style={styles.addNewInput}
+              activeUnderlineColor={Colors.primary}
+              underlineColor="transparent"
+              dense
+            />
+            <IconButton
+              icon="check"
+              mode="contained"
+              containerColor={Colors.primary}
+              iconColor="#fff"
+              size={20}
+              onPress={async () => {
+                if (newEventType.trim()) {
+                  await saveEventType(newEventType, newEventTypeColor);
+                  const typeId = newEventType.trim().toUpperCase().replace(/\s+/g, '_');
+                  setEventType(typeId);
+                  setNewEventType('');
+                  setNewEventTypeColor(EVENT_TYPE_COLOR_PALETTE[2]);
+                  setShowAddEventType(false);
+                }
+              }}
+            />
+            <IconButton
+              icon="close"
+              size={20}
+              onPress={() => {
                 setNewEventType('');
                 setShowAddEventType(false);
-              }
-            }}
-          />
-          <IconButton
-            icon="close"
-            size={20}
-            onPress={() => {
-              setNewEventType('');
-              setShowAddEventType(false);
-            }}
-          />
+              }}
+            />
+          </View>
+          {/* Color picker */}
+          <View style={styles.colorPalette}>
+            {EVENT_TYPE_COLOR_PALETTE.map(color => (
+              <TouchableOpacity
+                key={color}
+                style={[styles.colorSwatch, { backgroundColor: color }, newEventTypeColor === color && styles.colorSwatchSelected]}
+                onPress={() => setNewEventTypeColor(color)}
+              />
+            ))}
+          </View>
         </View>
       )}
 
       {/* Group Dropdown */}
-      <Text style={styles.label}>Grupa *</Text>
+      <Text style={styles.label}>{t('events.group')} *</Text>
       <DropdownMenu
         visible={activeMenu === 'group'}
         onDismiss={closeMenu}
@@ -451,8 +508,8 @@ export default function CreateEventScreen() {
       {/* Recurring Toggle */}
       <View style={styles.switchRow}>
         <View>
-          <Text style={styles.switchLabel}>Ponavljanje</Text>
-          <Text style={styles.switchDescription}>Ponavljaj ovaj događaj</Text>
+          <Text style={styles.switchLabel}>{t('events.recurring')}</Text>
+          <Text style={styles.switchDescription}>{t('events.recurringDescription')}</Text>
         </View>
         <Switch value={isRecurring} onValueChange={setIsRecurring} color={Colors.primary} />
       </View>
@@ -468,7 +525,7 @@ export default function CreateEventScreen() {
                 onPress={() => setRecurringFrequency(freq)}
               >
                 <Text style={[styles.frequencyText, recurringFrequency === freq && styles.frequencyTextActive]}>
-                  {freq === 'daily' ? 'Dnevno' : freq === 'weekly' ? 'Nedeljno' : 'Mesečno'}
+                  {freq === 'daily' ? t('events.daily') : freq === 'weekly' ? t('events.weekly') : t('events.monthly')}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -490,10 +547,10 @@ export default function CreateEventScreen() {
             </View>
           )}
 
-          <Text style={styles.label}>Ponavljaj do</Text>
+          <Text style={styles.label}>{t('events.repeatUntil')}</Text>
           <TouchableOpacity style={styles.dropdownButton} onPress={() => setShowRecurringUntilPicker(true)}>
             <MaterialCommunityIcons name="calendar" size={20} color={Colors.textSecondary} />
-            <Text style={[styles.dropdownText, { marginLeft: Spacing.sm }]}>{recurringUntil.toLocaleDateString()}</Text>
+            <Text style={[styles.dropdownText, { marginLeft: Spacing.sm }]}>{recurringUntil.toLocaleDateString('en-GB')}</Text>
           </TouchableOpacity>
           {showRecurringUntilPicker && (
             <DateTimePicker value={recurringUntil} mode="date" display="default" onChange={handleRecurringUntilChange} minimumDate={date} />
@@ -501,9 +558,26 @@ export default function CreateEventScreen() {
         </View>
       )}
 
+      {/* Location Picker (Required) */}
+      <View onLayout={(e) => { locationY.current = e.nativeEvent.layout.y; }}>
+        <Text style={styles.label}>{t('events.location')} *</Text>
+        <LocationPicker
+          value={locationValue}
+          onChange={setLocationValue}
+          savedLocations={savedLocations}
+          placeholder={t('events.searchLocation')}
+          savedLocationsTitle={t('events.previousLocations')}
+          onOpen={() => {
+            setTimeout(() => {
+              scrollViewRef.current?.scrollTo({ y: locationY.current, animated: true });
+            }, 100);
+          }}
+        />
+      </View>
+
       {/* ADVANCED OPTIONS BUTTON */}
       <TouchableOpacity style={styles.advancedOptionsButton} onPress={toggleAdvancedOptions}>
-        <Text style={styles.advancedOptionsText}>Napredne opcije</Text>
+        <Text style={styles.advancedOptionsText}>{t('events.advancedOptions')}</Text>
         <MaterialCommunityIcons
           name={showAdvancedOptions ? 'chevron-up' : 'chevron-down'}
           size={24}
@@ -515,109 +589,35 @@ export default function CreateEventScreen() {
       {showAdvancedOptions && (
         <View style={styles.advancedSection}>
           {/* Title */}
-          <Text style={styles.label}>Naziv događaja</Text>
+          <Text style={styles.label}>{t('events.eventName')}</Text>
           <TextInput
             value={title}
             onChangeText={setTitle}
             placeholder={generateEventTitle()}
-            mode="outlined"
+            mode="flat"
             style={styles.input}
-            outlineColor={Colors.border}
-            activeOutlineColor={Colors.primary}
+            activeUnderlineColor={Colors.primary}
+            underlineColor="transparent"
             textColor={Colors.text}
           />
 
           {/* Description */}
-          <Text style={styles.label}>Opis</Text>
+          <Text style={styles.label}>{t('events.description')}</Text>
           <TextInput
             value={description}
             onChangeText={setDescription}
-            placeholder="Dodatne informacije o događaju..."
-            mode="outlined"
+            placeholder={t('events.descriptionPlaceholder')}
+            mode="flat"
             multiline
             numberOfLines={3}
             style={[styles.input, styles.textArea]}
-            outlineColor={Colors.border}
-            activeOutlineColor={Colors.primary}
+            activeUnderlineColor={Colors.primary}
+            underlineColor="transparent"
             textColor={Colors.text}
           />
 
-          {/* Location Dropdown */}
-          <Text style={styles.label}>Lokacija</Text>
-          <DropdownMenu
-            visible={activeMenu === 'location'}
-            onDismiss={closeMenu}
-            onSelect={(key) => {
-              if (key === '__add_new__') {
-                setShowAddLocation(true);
-              } else {
-                setLocation(key);
-              }
-            }}
-            items={[
-              ...savedLocations.map((loc, index) => ({
-                key: loc,
-                title: loc,
-                icon: location === loc ? 'check' : 'map-marker',
-                selected: location === loc,
-              })),
-              { key: '__add_new__', title: '+ Dodaj novu lokaciju', titleColor: Colors.primary },
-            ]}
-            anchor={
-              <TouchableOpacity
-                style={styles.dropdownButton}
-                onPress={() => setActiveMenu('location')}
-              >
-                <MaterialCommunityIcons name="map-marker-outline" size={20} color={Colors.textSecondary} />
-                <Text style={[styles.dropdownText, { marginLeft: Spacing.sm, flex: 1 }]}>
-                  {location || 'Izaberi lokaciju'}
-                </Text>
-                <MaterialCommunityIcons name="chevron-down" size={24} color={Colors.textSecondary} />
-              </TouchableOpacity>
-            }
-          />
-
-          {/* Add new location */}
-          {showAddLocation && (
-            <View style={styles.addNewRow}>
-              <TextInput
-                value={newLocation}
-                onChangeText={setNewLocation}
-                placeholder="Nova lokacija"
-                mode="outlined"
-                style={styles.addNewInput}
-                outlineColor={Colors.border}
-                activeOutlineColor={Colors.primary}
-                dense
-              />
-              <IconButton
-                icon="check"
-                mode="contained"
-                containerColor={Colors.primary}
-                iconColor="#fff"
-                size={20}
-                onPress={async () => {
-                  if (newLocation.trim()) {
-                    await saveLocation(newLocation);
-                    setLocation(newLocation.trim());
-                    setNewLocation('');
-                    setShowAddLocation(false);
-                  }
-                }}
-              />
-              <IconButton
-                icon="close"
-                size={20}
-                onPress={() => {
-                  setNewLocation('');
-                  setShowAddLocation(false);
-                }}
-              />
-            </View>
-          )}
-
           {/* Equipment */}
-          <Text style={styles.label}>Oprema</Text>
+          <Text style={styles.label}>{t('events.equipment')}</Text>
           <DropdownMenu
             visible={activeMenu === 'equipment'}
             onDismiss={closeMenu}
@@ -634,7 +634,7 @@ export default function CreateEventScreen() {
                 title: item,
                 selected: equipment.includes(item),
               })),
-              { key: '__add_new__', title: '+ Dodaj novu opremu', titleColor: Colors.primary },
+              { key: '__add_new__', title: `+ ${t('events.addNewEquipment')}`, titleColor: Colors.primary },
             ]}
             anchor={
               <TouchableOpacity
@@ -643,7 +643,7 @@ export default function CreateEventScreen() {
               >
                 <MaterialCommunityIcons name="bag-personal-outline" size={20} color={Colors.textSecondary} />
                 <Text style={[styles.dropdownText, { marginLeft: Spacing.sm, flex: 1 }]}>
-                  {equipment.length > 0 ? `${equipment.length} stavki` : 'Dodaj opremu'}
+                  {equipment.length > 0 ? `${equipment.length} ${t('events.items')}` : t('events.addEquipment')}
                 </Text>
                 <MaterialCommunityIcons name="chevron-down" size={24} color={Colors.textSecondary} />
               </TouchableOpacity>
@@ -656,8 +656,8 @@ export default function CreateEventScreen() {
               <TextInput
                 value={newEquipment}
                 onChangeText={setNewEquipment}
-                placeholder="Nova oprema"
-                mode="outlined"
+                placeholder={t('events.newEquipment')}
+                mode="flat"
                 style={styles.addNewInput}
                 outlineColor={Colors.border}
                 activeOutlineColor={Colors.primary}
@@ -757,14 +757,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.surface,
-    borderWidth: 1,
-    borderColor: Colors.border,
     borderRadius: BorderRadius.sm,
     padding: Spacing.md,
   },
   dropdownText: { fontSize: FontSize.md, color: Colors.text, flex: 1 },
   addNewRow: { flexDirection: 'row', alignItems: 'center', marginTop: Spacing.sm, gap: Spacing.xs },
   addNewInput: { flex: 1, backgroundColor: Colors.surface },
+  colorPalette: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm, marginTop: Spacing.sm, marginBottom: Spacing.sm },
+  colorSwatch: { width: 28, height: 28, borderRadius: 14 },
+  colorSwatchSelected: { borderWidth: 3, borderColor: Colors.text },
+  typeColorDot: { width: 12, height: 12, borderRadius: 6, marginRight: Spacing.sm },
   timeRow: { flexDirection: 'row', gap: Spacing.md },
   timeColumn: { flex: 1 },
   switchRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: Spacing.lg, paddingVertical: Spacing.sm },
