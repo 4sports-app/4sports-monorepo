@@ -218,6 +218,14 @@ export default function CoachProfile() {
           onPress={() => router.push('/profile/edit')}
         />
         <Divider />
+        <List.Item
+          title={t('profile.changePassword') || 'Promeni lozinku'}
+          left={props => <List.Icon {...props} icon="lock-reset" color={Colors.text} />}
+          right={props => <List.Icon {...props} icon="chevron-right" color={Colors.textSecondary} />}
+          titleStyle={styles.menuItemTitle}
+          onPress={() => router.push('/profile/change-password')}
+        />
+        <Divider />
         <View style={styles.languageRow}>
           <MaterialCommunityIcons name="translate" size={24} color={Colors.text} style={styles.languageIcon} />
           <View style={styles.languagePickerWrapper}>

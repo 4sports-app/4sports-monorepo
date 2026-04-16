@@ -61,9 +61,22 @@ export default function GroupsScreen() {
   const fetchGroups = useCallback(async () => {
     try {
       const response = await api.get('/groups');
-      const groupsData = response.data.data || [];
-      setGroups(groupsData);
-      setFilteredGroups(groupsData);
+      const groupsData: GroupWithMembers[] = response.data.data || [];
+      // Preserve already-loaded members/inviteCode when refreshing
+      setGroups(prev => {
+        const prevMap = new Map(prev.map(g => [g._id, g]));
+        return groupsData.map(g => {
+          const existing = prevMap.get(g._id);
+          return existing?.members ? { ...g, members: existing.members, inviteCode: existing.inviteCode } : g;
+        });
+      });
+      setFilteredGroups(prev => {
+        const prevMap = new Map(prev.map(g => [g._id, g]));
+        return groupsData.map(g => {
+          const existing = prevMap.get(g._id);
+          return existing?.members ? { ...g, members: existing.members, inviteCode: existing.inviteCode } : g;
+        });
+      });
     } catch (error) {
       console.error('Error fetching groups:', error);
     } finally {

@@ -75,6 +75,24 @@ export function usePushNotifications(): UsePushNotificationsResult {
         }
         break;
 
+      case 'PAYMENT_DUE':
+        if (data.memberId) {
+          router.push({
+            pathname: '/(coach)/payments/record',
+            params: { memberId: data.memberId },
+          });
+        }
+        break;
+
+      case 'MEDICAL_EXPIRY':
+        if (data.memberId) {
+          router.push({
+            pathname: '/(coach)/medical/record',
+            params: { memberId: data.memberId },
+          });
+        }
+        break;
+
       case 'ATTENDANCE_MARKED':
         // Parent notification - navigate to member details
         if (data.memberId) {

@@ -17,7 +17,13 @@ export interface IEvent extends Document {
   color?: string;
   startTime: Date;
   endTime: Date;
-  location?: string;
+  location: string;
+  locationCoords?: {
+    lat: number;
+    lng: number;
+    placeId?: string;
+    address?: string;
+  };
   createdBy: mongoose.Types.ObjectId;
   isMandatory: boolean;
   status: 'SCHEDULED' | 'CANCELLED' | 'COMPLETED';
@@ -51,7 +57,13 @@ const eventSchema = new Schema<IEvent, IEventModel>(
     color: { type: String, trim: true, maxlength: 20 },
     startTime: { type: Date, required: true },
     endTime: { type: Date, required: true },
-    location: { type: String, trim: true, maxlength: 200 },
+    location: { type: String, required: true, trim: true, maxlength: 200 },
+    locationCoords: {
+      lat: { type: Number },
+      lng: { type: Number },
+      placeId: { type: String, trim: true },
+      address: { type: String, trim: true, maxlength: 300 },
+    },
     createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     isMandatory: { type: Boolean, default: true },
     status: { type: String, enum: ['SCHEDULED', 'CANCELLED', 'COMPLETED'], default: 'SCHEDULED' },

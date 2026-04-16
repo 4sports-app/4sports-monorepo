@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   logo: {
-    fontSize: FontSize.xxxl * 1.5,
+    fontSize: FontSize.xxl,
     fontWeight: 'bold',
     color: AppColors.primary,
     letterSpacing: 2,

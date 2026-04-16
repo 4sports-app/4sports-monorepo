@@ -3,6 +3,9 @@ import {
   signInWithEmailAndPassword,
   signOut,
   sendPasswordResetEmail,
+  updatePassword,
+  reauthenticateWithCredential,
+  EmailAuthProvider,
   User,
   UserCredential,
 } from 'firebase/auth';
@@ -69,6 +72,22 @@ export const sendPasswordReset = async (email: string): Promise<void> => {
  */
 export const getCurrentUser = (): User | null => {
   return auth.currentUser;
+};
+
+/**
+ * Change current user's password (re-authenticates first)
+ */
+export const changePassword = async (
+  currentPassword: string,
+  newPassword: string
+): Promise<void> => {
+  const user = auth.currentUser;
+  if (!user || !user.email) {
+    throw new Error('No authenticated user');
+  }
+  const credential = EmailAuthProvider.credential(user.email, currentPassword);
+  await reauthenticateWithCredential(user, credential);
+  await updatePassword(user, newPassword);
 };
 
 /**

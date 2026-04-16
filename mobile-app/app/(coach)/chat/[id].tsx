@@ -13,10 +13,12 @@ import {
   ActivityIndicator,
   Modal,
   Dimensions,
+  AppState,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, Stack, router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useHeaderHeight } from '@react-navigation/elements';
 import { Colors } from '@/constants/Colors';
 import { useAuth } from '@/services/AuthContext';
 import * as ImagePicker from 'expo-image-picker';
@@ -64,7 +66,19 @@ export default function ChatScreen() {
   const [sending, setSending] = useState(false);
   const [imageModalVisible, setImageModalVisible] = useState(false);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
+  const headerHeight = useHeaderHeight();
   const flatListRef = useRef<FlatList>();
+  const [kavKey, setKavKey] = useState(0);
+
+  // Force KeyboardAvoidingView remount when app returns from background
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') {
+        setKavKey((k) => k + 1);
+      }
+    });
+    return () => sub.remove();
+  }, []);
 
   const openImageModal = (imageUrl: string) => {
     setSelectedImageUrl(imageUrl);
@@ -229,7 +243,11 @@ export default function ChatScreen() {
         ]}
       >
         {!isOwnMessage && (
-          <View style={styles.avatarSmall}>
+          <TouchableOpacity
+            style={styles.avatarSmall}
+            onPress={() => router.push(`/(coach)/users/${item.senderId}` as any)}
+            activeOpacity={0.7}
+          >
             {(conversation?.participantDetails[item.senderId]?.avatar || item.senderAvatar) ? (
               <Image
                 source={{ uri: conversation?.participantDetails[item.senderId]?.avatar || item.senderAvatar! }}
@@ -240,7 +258,7 @@ export default function ChatScreen() {
                 {item.senderName?.substring(0, 1).toUpperCase() || '?'}
               </Text>
             )}
-          </View>
+          </TouchableOpacity>
         )}
 
         <View
@@ -352,7 +370,12 @@ export default function ChatScreen() {
         }}
       />
 
-      <View style={styles.container}>
+      <KeyboardAvoidingView
+        key={kavKey}
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={headerHeight}
+      >
         <FlatList
           ref={flatListRef}
           data={messages}
@@ -416,7 +439,7 @@ export default function ChatScreen() {
             )}
           </TouchableOpacity>
         </View>
-      </View>
+      </KeyboardAvoidingView>
 
       {/* Image Zoom Modal */}
       <Modal

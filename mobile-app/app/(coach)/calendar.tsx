@@ -4,6 +4,7 @@ import { Text, Card, FAB, Chip, ActivityIndicator, Button } from 'react-native-p
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getFabBottom } from '@/components/CustomTabBar';
 import { Colors } from '@/constants/Colors';
 import { Spacing, BorderRadius, FontSize } from '@/constants/Layout';
@@ -13,6 +14,8 @@ import EventCalendar from '@/components/EventCalendar';
 import DropdownMenu from '@/components/DropdownMenu';
 import api from '@/services/api';
 import { Event, Group } from '@/types';
+
+const SAVED_EVENT_TYPES_KEY = '@saved_event_types';
 
 type FilterType = 'all' | 'training' | 'competition';
 
@@ -36,7 +39,12 @@ const getRelativeTimeText = (eventDate: Date): string => {
 };
 
 // Helper function to get event type color for any type string
-const getEventTypeColorFromString = (type: string): string => {
+const getEventTypeColorFromString = (type: string, typeColorMap?: Record<string, string>): string => {
+  if (typeColorMap) {
+    if (typeColorMap[type]) return typeColorMap[type];
+    const typeId = type?.toUpperCase().replace(/\s+/g, '_');
+    if (typeColorMap[typeId]) return typeColorMap[typeId];
+  }
   const upperType = type?.toUpperCase() || '';
   if (upperType === 'TRAINING' || upperType.includes('TRENING')) {
     return Colors.eventTraining;
@@ -63,6 +71,22 @@ export default function CoachCalendar() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [groupMenuVisible, setGroupMenuVisible] = useState(false);
+  const [showAllCoaches, setShowAllCoaches] = useState(false);
+  const [eventTypeColorMap, setEventTypeColorMap] = useState<Record<string, string>>({});
+
+  const loadEventTypeColors = useCallback(async () => {
+    try {
+      const stored = await AsyncStorage.getItem(SAVED_EVENT_TYPES_KEY);
+      if (stored) {
+        const types: { id: string; label: string; color: string }[] = JSON.parse(stored);
+        const map: Record<string, string> = {};
+        types.forEach(t => { map[t.id] = t.color; });
+        setEventTypeColorMap(map);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
 
   const fetchGroups = useCallback(async () => {
     try {
@@ -99,7 +123,8 @@ export default function CoachCalendar() {
   useFocusEffect(
     useCallback(() => {
       fetchEvents();
-    }, [fetchEvents])
+      loadEventTypeColors();
+    }, [fetchEvents, loadEventTypeColors])
   );
 
   const getSelectedGroupName = () => {
@@ -114,8 +139,21 @@ export default function CoachCalendar() {
   };
 
 
-  // Filter events by type and selected group (handles string types)
+  // Check if current user is coach of this event's group
+  const isMyEvent = (event: Event): boolean => {
+    if (!user?._id || typeof event.groupId !== 'object') return true;
+    const coaches = event.groupId.coaches || [];
+    return coaches.some((coachId: any) => {
+      const id = typeof coachId === 'string' ? coachId : coachId._id || coachId;
+      return id === user._id;
+    });
+  };
+
+  // Filter events by type, selected group, and coach ownership
   const filteredEvents = events.filter(event => {
+    // Filter by coach ownership (default: only my events)
+    if (!showAllCoaches && !isMyEvent(event)) return false;
+
     // Filter by selected group if any
     if (selectedGroupId) {
       const eventGroupId = typeof event.groupId === 'object' ? event.groupId._id : event.groupId;
@@ -159,16 +197,6 @@ export default function CoachCalendar() {
     router.push(`/(coach)/events/${eventId}`);
   };
 
-  // Check if current user is coach of this event's group
-  const isMyEvent = (event: Event): boolean => {
-    if (!user?._id || typeof event.groupId !== 'object') return true;
-    const coaches = event.groupId.coaches || [];
-    return coaches.some((coachId: any) => {
-      const id = typeof coachId === 'string' ? coachId : coachId._id || coachId;
-      return id === user._id;
-    });
-  };
-
   const formatEventTime = (dateString: string) => {
     try {
       const date = new Date(dateString);
@@ -185,7 +213,7 @@ export default function CoachCalendar() {
       if (!dateString) return '';
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return '';
-      return date.toLocaleDateString();
+      return date.toLocaleDateString('en-GB');
     } catch {
       return '';
     }
@@ -214,10 +242,11 @@ export default function CoachCalendar() {
       >
         {/* Calendar */}
         <EventCalendar
-          events={events}
+          events={filteredEvents}
           selectedDate={selectedDate}
           onDayPress={handleDayPress}
           userId={user?._id}
+          eventTypeColors={eventTypeColorMap}
         />
 
         {/* Group Filter */}
@@ -253,6 +282,17 @@ export default function CoachCalendar() {
         {/* Type Filter Chips */}
         <View style={styles.filterRow}>
           <Chip
+            selected={showAllCoaches}
+            style={[styles.filterChip, showAllCoaches && styles.filterChipSelected]}
+            textStyle={styles.filterChipText}
+            selectedColor={Colors.textSecondary}
+            onPress={() => setShowAllCoaches(!showAllCoaches)}
+            icon={showAllCoaches ? 'account-group' : 'account'}
+          >
+            {showAllCoaches ? t('calendar.allCoaches') || 'Svi treneri' : t('calendar.myEvents') || 'Moji'}
+          </Chip>
+          <View style={styles.filterDivider} />
+          <Chip
             selected={filter === 'all'}
             style={[styles.filterChip, filter === 'all' && styles.filterChipSelected]}
             textStyle={styles.filterChipText}
@@ -284,7 +324,7 @@ export default function CoachCalendar() {
         {/* Events List Section */}
         <Text style={styles.sectionTitle}>
           {selectedDate
-            ? `${t('events.eventsOn')} ${new Date(selectedDate).toLocaleDateString()}`
+            ? `${t('events.eventsOn')} ${new Date(selectedDate).toLocaleDateString('en-GB')}`
             : t('dashboard.upcomingEvents')}
         </Text>
 
@@ -314,12 +354,12 @@ export default function CoachCalendar() {
                 key={event._id}
                 onPress={() => navigateToEvent(event._id)}
                 activeOpacity={0.7}
-                style={{ opacity: isOwn ? 1 : 0.4 }}
+                style={{ opacity: showAllCoaches && !isOwn ? 0.4 : 1 }}
               >
                 <Card style={styles.eventCard}>
                   <Card.Content style={styles.eventCardContent}>
                     {/* Date Column - Compact */}
-                    <View style={[styles.dateColumn, { backgroundColor: getEventTypeColorFromString(event.type) }]}>
+                    <View style={[styles.dateColumn, { backgroundColor: getEventTypeColorFromString(event.type, eventTypeColorMap) }]}>
                       <Text style={styles.dateDay}>{dayNumber}</Text>
                       <Text style={styles.dateDayName}>{dayName}</Text>
                     </View>
@@ -401,16 +441,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginTop: Spacing.md,
     marginBottom: Spacing.md,
-    gap: Spacing.sm,
+    gap: Spacing.xs,
   },
   filterChip: {
     backgroundColor: Colors.surface,
+    paddingHorizontal: 0,
   },
   filterChipSelected: {
     backgroundColor: Colors.primary + '30',
   },
   filterChipText: {
     fontSize: FontSize.sm,
+  },
+  filterDivider: {
+    width: 1,
+    backgroundColor: Colors.border,
+    marginVertical: 4,
   },
   sectionTitle: {
     fontSize: FontSize.lg,

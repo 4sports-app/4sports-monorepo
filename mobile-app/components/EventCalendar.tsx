@@ -10,6 +10,7 @@ interface EventCalendarProps {
   selectedDate: string | null;
   onDayPress: (date: string) => void;
   userId?: string; // Current user ID - used to show other coaches' events with lower opacity
+  eventTypeColors?: Record<string, string>; // Custom event type colors keyed by type ID
 }
 
 interface MarkedDates {
@@ -26,7 +27,13 @@ interface MarkedDates {
 }
 
 // Helper function to get event type color for any type string
-const getEventTypeColor = (type: string): string => {
+const getEventTypeColor = (type: string, eventTypeColors?: Record<string, string>): string => {
+  if (eventTypeColors) {
+    // Check direct ID match first
+    if (eventTypeColors[type]) return eventTypeColors[type];
+    const typeId = type?.toUpperCase().replace(/\s+/g, '_');
+    if (eventTypeColors[typeId]) return eventTypeColors[typeId];
+  }
   const upperType = type?.toUpperCase() || '';
   if (upperType === 'TRAINING' || upperType.includes('TRENING')) {
     return Colors.eventTraining;
@@ -37,7 +44,6 @@ const getEventTypeColor = (type: string): string => {
   if (upperType === 'OTHER') {
     return Colors.eventMeeting;
   }
-  // Return primary color for custom types
   return Colors.primary;
 };
 
@@ -56,6 +62,7 @@ export default function EventCalendar({
   selectedDate,
   onDayPress,
   userId,
+  eventTypeColors,
 }: EventCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date().toISOString().split('T')[0]);
 
@@ -78,7 +85,7 @@ export default function EventCalendar({
     // Create marks for each date with events
     eventsByDate.forEach((dateEvents, date) => {
       // Get the primary event type color (first event)
-      const primaryColor = getEventTypeColor(dateEvents[0].type);
+      const primaryColor = getEventTypeColor(dateEvents[0].type, eventTypeColors);
 
       // Check if any event on this date belongs to current user's groups
       const hasOwnEvent = !userId || dateEvents.some(e => isUserCoachOfEvent(e, userId));
@@ -98,6 +105,52 @@ export default function EventCalendar({
         },
       };
     });
+
+    // Highlight today's date
+    const todayKey = new Date().toISOString().split('T')[0];
+    const existingToday = marks[todayKey];
+    if (existingToday) {
+      marks[todayKey] = {
+        ...existingToday,
+        customStyles: {
+          container: {
+            ...existingToday.customStyles?.container,
+            borderWidth: 2,
+            borderColor: Colors.primary,
+            width: 40,
+            height: 40,
+            alignItems: 'center',
+            justifyContent: 'center',
+          },
+          text: {
+            ...existingToday.customStyles?.text,
+            fontSize: 17,
+            fontWeight: '800',
+            textAlign: 'center',
+          },
+        },
+      };
+    } else {
+      marks[todayKey] = {
+        customStyles: {
+          container: {
+            borderWidth: 2,
+            borderColor: Colors.primary,
+            borderRadius: 20,
+            width: 40,
+            height: 40,
+            alignItems: 'center',
+            justifyContent: 'center',
+          },
+          text: {
+            color: Colors.primary,
+            fontSize: 17,
+            fontWeight: '800',
+            textAlign: 'center',
+          },
+        },
+      };
+    }
 
     // Add selected date styling
     if (selectedDate) {

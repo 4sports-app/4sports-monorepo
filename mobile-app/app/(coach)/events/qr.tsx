@@ -18,7 +18,7 @@ export default function EventQRCodeScreen() {
   }>();
 
   return (
-    <ScrollView contentContainerStyle={[styles.container, { paddingBottom: insets.bottom + Spacing.xl }]}>
+    <ScrollView contentContainerStyle={[styles.container, { paddingBottom: insets.bottom + 100 }]}>
       <Card style={styles.card}>
         <Card.Content style={styles.content}>
           {/* Title */}

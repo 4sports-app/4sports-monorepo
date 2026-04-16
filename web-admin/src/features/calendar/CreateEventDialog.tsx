@@ -181,11 +181,11 @@ export function CreateEventDialog({ open, onOpenChange, selectedDate, event }: C
     if (formData.startTime >= formData.endTime) {
       newErrors.endTime = t('validation.endTimeAfterStart');
     }
-    if (formData.isRecurring && !formData.recurringUntil) {
-      newErrors.recurringUntil = t('validation.selectRepeatEnd');
-    }
     if (!formData.location.trim()) {
       newErrors.location = t('validation.locationRequired');
+    }
+    if (formData.isRecurring && !formData.recurringUntil) {
+      newErrors.recurringUntil = t('validation.selectRepeatEnd');
     }
 
     setErrors(newErrors);
@@ -224,7 +224,7 @@ export function CreateEventDialog({ open, onOpenChange, selectedDate, event }: C
         color: selectedTypeColor,
         startTime: startDateTime.toISOString(),
         endTime: endDateTime.toISOString(),
-        location: formData.location.trim() || undefined,
+        location: formData.location.trim(),
         equipment: formData.equipment.length > 0 ? formData.equipment : undefined,
         isRecurring: formData.isRecurring,
       };
@@ -627,6 +627,18 @@ export function CreateEventDialog({ open, onOpenChange, selectedDate, event }: C
                 </div>
               </div>
             )}
+
+            {/* Location (Required) */}
+            <div className="grid gap-2">
+              <Label htmlFor="location">{t('calendar.location') || 'Lokacija'} *</Label>
+              <Input
+                id="location"
+                value={formData.location}
+                onChange={(e) => handleChange('location', e.target.value)}
+                placeholder={t('calendar.enterLocation')}
+              />
+              {errors.location && <p className="text-sm text-red-500">{errors.location}</p>}
+            </div>
 
             {/* Separator */}
             <div className="relative">

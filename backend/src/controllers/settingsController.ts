@@ -24,10 +24,21 @@ export const getClubSettings = async (req: Request, res: Response) => {
       success: true,
       data: {
         id: club._id,
+        clubName: club.name,
         name: club.name,
         address: club.address || '',
         phoneNumber: club.phoneNumber || '',
         email: club.email || '',
+        logoUrl: club.logo || '',
+        description: club.description || '',
+        website: club.website || '',
+        facebook: club.facebook || '',
+        instagram: club.instagram || '',
+        twitter: club.twitter || '',
+        foundedYear: club.foundedYear || '',
+        stadium: club.stadium || '',
+        history: club.history || '',
+        achievements: club.achievements || '',
         subscriptionPlan: club.subscriptionPlan,
         memberLimit: club.memberLimit,
         currentMembers: club.currentMembers,
@@ -56,7 +67,7 @@ export const updateClubSettings = async (req: Request, res: Response) => {
     const clubId = req.user.clubId;
     if (!clubId) return res.status(403).json({ success: false, error: { code: 'FORBIDDEN', message: 'You must be associated with a club' } });
 
-    const { name, address, phoneNumber, email } = req.body;
+    const { name, address, phoneNumber, email, logoUrl, description, website, facebook, instagram, twitter, foundedYear, stadium, history, achievements } = req.body;
 
     const club = await Club.findById(clubId);
     if (!club) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Club not found' } });
@@ -65,6 +76,16 @@ export const updateClubSettings = async (req: Request, res: Response) => {
     if (address !== undefined) club.address = address;
     if (phoneNumber !== undefined) club.phoneNumber = phoneNumber;
     if (email !== undefined) club.email = email;
+    if (logoUrl !== undefined) club.logo = logoUrl;
+    if (description !== undefined) club.description = description;
+    if (website !== undefined) club.website = website;
+    if (facebook !== undefined) club.facebook = facebook;
+    if (instagram !== undefined) club.instagram = instagram;
+    if (twitter !== undefined) club.twitter = twitter;
+    if (foundedYear !== undefined) club.foundedYear = foundedYear;
+    if (stadium !== undefined) club.stadium = stadium;
+    if (history !== undefined) club.history = history;
+    if (achievements !== undefined) club.achievements = achievements;
 
     await club.save();
 
@@ -72,10 +93,21 @@ export const updateClubSettings = async (req: Request, res: Response) => {
       success: true,
       data: {
         id: club._id,
+        clubName: club.name,
         name: club.name,
         address: club.address || '',
         phoneNumber: club.phoneNumber || '',
         email: club.email || '',
+        logoUrl: club.logo || '',
+        description: club.description || '',
+        website: club.website || '',
+        facebook: club.facebook || '',
+        instagram: club.instagram || '',
+        twitter: club.twitter || '',
+        foundedYear: club.foundedYear || '',
+        stadium: club.stadium || '',
+        history: club.history || '',
+        achievements: club.achievements || '',
         subscriptionPlan: club.subscriptionPlan,
         memberLimit: club.memberLimit,
         currentMembers: club.currentMembers,

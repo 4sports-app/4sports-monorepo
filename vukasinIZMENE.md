@@ -168,5 +168,5 @@ Individualni: Tenis 🎾, Atletika 🏃, Plivanje 🏊, Džudo 🥋, Karate 🥋
 12. Google Maps za lokaciju                      → 3h (treba API ključ)
 13. Onboarding popup                             → 5h
 14. Guide nastavak                               → 3h
-15. Rashodi — čekamo odluku
+
 ```

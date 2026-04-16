@@ -3,6 +3,10 @@ import * as Localization from 'expo-localization';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import en from './en';
 import sr from './sr';
+import ar from './ar';
+import de from './de';
+import fr from './fr';
+import it from './it';
 
 // Storage key for persisted language preference
 export const LANGUAGE_STORAGE_KEY = '@4sports_language';
@@ -11,6 +15,10 @@ export const LANGUAGE_STORAGE_KEY = '@4sports_language';
 export const SUPPORTED_LANGUAGES = {
   en: { name: 'English', nativeName: 'English', flag: '🇬🇧' },
   sr: { name: 'Serbian', nativeName: 'Srpski', flag: '🇷🇸' },
+  ar: { name: 'Arabic', nativeName: 'العربية', flag: '🇸🇦' },
+  de: { name: 'German', nativeName: 'Deutsch', flag: '🇩🇪' },
+  fr: { name: 'French', nativeName: 'Français', flag: '🇫🇷' },
+  it: { name: 'Italian', nativeName: 'Italiano', flag: '🇮🇹' },
 } as const;
 
 export type LanguageCode = keyof typeof SUPPORTED_LANGUAGES;
@@ -19,12 +27,16 @@ export type LanguageCode = keyof typeof SUPPORTED_LANGUAGES;
 const i18n = new I18n({
   en,
   sr,
+  ar,
+  de,
+  fr,
+  it,
 });
 
 // Set default locale based on device settings
 const deviceLocale = Localization.getLocales()[0]?.languageCode || 'en';
 i18n.defaultLocale = 'en';
-i18n.locale = deviceLocale === 'sr' ? 'sr' : 'en';
+i18n.locale = deviceLocale in SUPPORTED_LANGUAGES ? deviceLocale : 'en';
 
 // Enable fallback to default locale
 i18n.enableFallback = true;
@@ -33,12 +45,12 @@ i18n.enableFallback = true;
 export const initializeLanguage = async (): Promise<LanguageCode> => {
   try {
     const storedLanguage = await AsyncStorage.getItem(LANGUAGE_STORAGE_KEY);
-    if (storedLanguage && (storedLanguage === 'en' || storedLanguage === 'sr')) {
+    if (storedLanguage && storedLanguage in SUPPORTED_LANGUAGES) {
       i18n.locale = storedLanguage;
       return storedLanguage;
     }
     // If no stored preference, use device locale
-    const locale = deviceLocale === 'sr' ? 'sr' : 'en';
+    const locale = deviceLocale in SUPPORTED_LANGUAGES ? deviceLocale as LanguageCode : 'en';
     i18n.locale = locale;
     return locale;
   } catch (error) {
