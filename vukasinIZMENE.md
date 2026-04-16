@@ -1,172 +1,172 @@
-# vukasinIZMENE — Šta, Gde, Kako
+# vukasinIZMENE — Ažuriran plan
 
 ---
 
-## 1. Grupiranje po treneru + toggle na pie chartu
+## ✅ ZAVRŠENO
 
-| Fajl | Izmena |
-|------|--------|
-| `web-admin/src/features/finances/groupingUtils.ts` | Dodati funkciju `groupTransactionsByCoach()` |
-| `web-admin/src/features/finances/TransactionGroupingControls.tsx` | Dodati opciju `value="coach"` u Select |
-| `web-admin/src/features/finances/FinancePage.tsx` | Dodati `case 'coach':` koji zove novu funkciju |
-| `web-admin/src/features/dashboard/GroupBreakdownChart.tsx` | Dodati toggle dugme Grupe/Treneri, pie chart menja podatke |
-| `web-admin/src/locales/sr.ts` + `en.ts` | `groupByCoach`, `coachBreakdown` ključevi |
+| # | Stavka | Status |
+|---|--------|--------|
+| 1 | RecordPaymentDialog pre-fill iznosa članarine | ✅ |
+| 2 | Bold iznosi u balance pie chartu (BalanceDonutCard) | ✅ |
+| 3 | Svi datumi → dd/MM/yyyy (dateUtils.ts helper) | ✅ |
+| 4 | Chat → klik na ime → profil člana | ✅ |
+| 5 | Dugmići na profilu člana (uplata + medicinski badge klikabilan) | ✅ |
+| 6 | Upload slike vlasnika (SettingsPage) | ✅ |
+| 7 | Upload grb kluba (ClubProfilePage → /upload/post-images) | ✅ |
+| 8 | Lokacija obavezna za event + LocationAutocomplete (Nominatim) | ✅ |
+| 9 | Tip događaja sa bojom (color picker, 12 boja, localStorage) | ✅ |
+| 10 | Grupiranje po treneru + toggle u pie chartu (dashboard) | ✅ |
+| 11 | Kad je plaćeno → dugme postaje outline "Ažuriraj" | ✅ |
+| 12 | Error handling (AuthContext, API interceptor, QueryClient) | ✅ |
+| 13 | Svi debug console.log uklonjeni (web-admin) | ✅ |
+| 14 | Upload bug fix (Content-Type boundary, Mongoose validacija) | ✅ |
 
 ---
 
-## 2. Onboarding popup (club setup)
+## 🔲 WEB ADMIN — preostalo
+
+### 1. Onboarding popup (club setup)
 
 | Fajl | Izmena |
 |------|--------|
-| `web-admin/src/components/shared/ClubOnboardingDialog.tsx` | **NOV FAJL** — modal sa 2 koraka |
-| `web-admin/src/App.tsx` | Renderovati `<ClubOnboardingDialog>` ako klub nema `name` ili `sport` |
-| `web-admin/src/features/auth/AuthContext.tsx` | Posle `fetchBackendUser()` proveriti `clubData.sport` — eksponovati `showOnboarding` state |
-| `backend/src/models/Club.ts` | Dodati `sport: { type: String }` |
-| `backend/src/controllers/settingsController.ts` | Primati i čuvati `sport` u `PUT /settings/club` |
+| `web-admin/src/components/shared/ClubOnboardingDialog.tsx` | **NOV FAJL** — stepper modal (2 koraka) |
+| `web-admin/src/App.tsx` | Renderovati `<ClubOnboardingDialog>` ako klub nema `clubName` ili `sport` |
+| `web-admin/src/features/auth/AuthContext.tsx` | Posle login-a proveriti `clubData.sport` → state `showOnboarding` |
+| `backend/src/models/Club.ts` | Dodati `sport: String`, `currency: String` |
+| `backend/src/controllers/settingsController.ts` | Primati `sport` i `currency` u `PUT /settings/club` |
 
-**Korak 1 (obavezno):** naziv kluba, sport (select sa ikonama — lista ispod), logo upload, telefon, adresa
-**Korak 2 (preskoči):** istorijat, trofeje, web sajt, Instagram, Facebook
+**Korak 1 (obavezno):** ime kluba, sport (select sa ikonama), upload grb, telefon, lokacija, valuta
+**Korak 2 (opciono, preskoči):** istorijat, trofeji, web sajt, Instagram, Facebook
 
 **Sportovi:**
-Timski: Fudbal ⚽, Košarka 🏀, Odbojka 🏐, Rukomet 🤾, Ragbi 🏉, Hokej 🏒, Vaterpolo 🏊, Američki fudbal 🏈
+Timski: Fudbal ⚽, Košarka 🏀, Odbojka 🏐, Rukomet 🤾, Ragbi 🏉, Hokej 🏒, Vaterpolo 🤽, Američki fudbal 🏈
 Individualni: Tenis 🎾, Atletika 🏃, Plivanje 🏊, Džudo 🥋, Karate 🥋, Gimnastika 🤸, Boks 🥊, Biciklizam 🚴, Ski ⛷️
 \+ Custom input (ostalo)
 
 ---
 
-## 3. Dugmići na profilu člana (uplata + medicinski)
+### 2. Biranje valute globalno (na onboarding-u)
 
 | Fajl | Izmena |
 |------|--------|
-| `web-admin/src/features/profile/ProfilePage.tsx` | Dodati 2 dugmeta + stanja `recordPaymentOpen`, `recordMedicalOpen` |
-| — | Renderovati `<RecordPaymentDialog>` i `<RecordMedicalDialog>` direktno sa profila |
+| `backend/src/models/Club.ts` | `currency: { type: String, default: 'RSD' }` |
+| `web-admin/src/context/CurrencyContext.tsx` | **NOV FAJL** — globalni context za valutu |
+| Svi fajlovi gde piše `RSD` hardkodirano | Zameniti sa `currency` iz konteksta |
+| Onboarding dialog | Select za valutu (RSD, EUR, USD, GBP, CHF, BAM, HRK, TRY, SAR, AED) |
 
 ---
 
-## 4. Chat → klik na učesnika → profil člana
+### 3. Stavljanje info i slike kluba u profilu kluba
 
 | Fajl | Izmena |
 |------|--------|
-| `web-admin/src/features/chat/ChatPage.tsx` | Učesnike u headeru omotati sa `<Link to="/profile?userId=...">` |
+| `web-admin/src/features/club-profile/ClubProfilePage.tsx` | Upload logo radi (fixovano), proveriti prikaz svih polja |
+| `backend/src/controllers/settingsController.ts` | Sačuvati sva polja (foundedYear, stadium, achievements, social linkovi) |
 
 ---
 
-## 5. Bold iznosi u balance pie chartu
+### 4. Rashodi/Troškovi — ukloniti iz UI
 
 | Fajl | Izmena |
 |------|--------|
-| `web-admin/src/features/dashboard/BalanceDonutCard.tsx` | Na iznosima u legendi dodati `font-bold text-base` |
+| `web-admin/src/features/finances/FinancePage.tsx` | Sakriti EXPENSE tab/filter |
+| `web-admin/src/features/finances/AddTransactionDialog.tsx` | Ukloniti mogućnost biranja EXPENSE tipa |
+| Dashboard KPI kartice | Ukloniti "Rashodi" karticu ili sakriti |
 
 ---
 
-## 6. Prvi mesec besplatno (trial)
+### 5. Globalni search (pretraga svega)
 
 | Fajl | Izmena |
 |------|--------|
-| `backend/src/models/Club.ts` | Dodati `trialEndsAt: { type: Date, default: now + 30 dana }` |
-| `backend/src/controllers/settingsController.ts` | `GET /settings/subscription` vraća `isInTrial: bool, trialEndsAt: Date` |
-| `web-admin/src/features/settings/SettingsPage.tsx` | Prikazati banner "Ostalo X dana besplatnog perioda" |
+| `web-admin/src/components/shared/GlobalSearch.tsx` | **NOV FAJL** — search bar u header-u |
+| `web-admin/src/components/layout/Sidebar.tsx` ili `Header.tsx` | Ubaciti `<GlobalSearch>` |
+| `backend/src/controllers/searchController.ts` | **NOV FAJL** — `GET /search?q=...` pretražuje članove, grupe, transakcije, preglede |
+| `backend/src/routes/searchRoutes.ts` | Nova ruta |
+
+Treba da bude dovoljno da ukucaš ime/termin i izađu svi rezultati (članovi, grupe, pregledi, transakcije).
 
 ---
 
-## 7. Lokacija — obavezno + mapa
+### 6. Dodati još jezika + srediti hardkodirane stringove
 
 | Fajl | Izmena |
 |------|--------|
-| `web-admin/src/features/calendar/CreateEventDialog.tsx` | Promeniti label u obavezno, dodati validaciju u `validateForm()` |
-| `backend/src/models/Event.ts` | `location: { required: true }` |
-| `web-admin/src/features/calendar/CreateEventDialog.tsx` | Zameniti text input sa Google Maps Autocomplete inputom (Places API) |
-| `web-admin/src/features/calendar/CalendarPage.tsx` (event detalji) | Prikazati Google Map embed sa pin-om |
+| `web-admin/src/locales/de.ts` | **NOV FAJL** — nemački prevod |
+| `web-admin/src/locales/fr.ts` | **NOV FAJL** — francuski prevod |
+| `web-admin/src/locales/it.ts` | **NOV FAJL** — italijanski prevod |
+| `web-admin/src/locales/ar.ts` | **NOV FAJL** — arapski prevod (RTL support?) |
+| `web-admin/src/i18n.ts` | Registrovati nove jezike |
+| Svi fajlovi sa hardkodiranim sr/en stringovima | Zameniti sa `t('...')` ključevima |
 
-> ⚠️ Treba Google Maps API ključ → dodati u `web-admin/.env` kao `VITE_GOOGLE_MAPS_API_KEY`
-
----
-
-## 8. Rashodi — ukloniti iz UI
-
-> **Pojašnjenje:** U finansijama postoje 2 tipa transakcija — INCOME (prihod) i EXPENSE (rashod). U lokalizaciji se zove "Rashod/Rashodi". Hoćeš da se to ukloni? Tj. da u sistemu budu samo prihodi (uplate članarina) bez kategorije rashoda?
-
-> **Ostavljam ovu tačku dok ne potvrdite šta tačno treba.**
+**Hardkodirani stringovi za pronaći:** "Plaćeno", "Nije plaćeno", "Validni pregledi", "Ističe uskoro", "Bez grupe", "plaćeno", "validnih" itd.
 
 ---
 
-## 9. Upload slike profila vlasnika + grb kluba
-
-**Backend endpoint već postoji:** `POST /api/upload/profile-picture` (`uploadController.ts:16`)
+### 7. Guide/Tutorial za sve ekrane
 
 | Fajl | Izmena |
 |------|--------|
-| `web-admin/src/features/profile/ProfilePage.tsx` | Avatar klikabilan → `<input type="file" hidden>` → POST `/upload/profile-picture` |
-| `web-admin/src/features/club-profile/ClubProfilePage.tsx` | Logo upload već postoji — proveriti da li radi |
+| `web-admin/src/context/OnboardingContext.tsx` | Dodati `PAGE_TUTORIALS` za: `calendar`, `chat`, `club-profile`, `finances`, `evidence` |
+| Svi page fajlovi | Dodati `data-tour="..."` atribute na ključne elemente |
 
 ---
 
-## 10. Svi datumi → dd/MM/yyyy
+### 8. Terms & Conditions
 
 | Fajl | Izmena |
 |------|--------|
-| `web-admin/src/lib/dateUtils.ts` | **NOV FAJL** — `formatDate(d)` → `'dd/MM/yyyy'`, `formatDateTime(d)` → `'dd/MM/yyyy HH:mm'` |
-| `web-admin/src/features/profile/ProfilePage.tsx:426` | `toLocaleDateString(...)` → `formatDate(...)` |
-| `web-admin/src/features/evidence/EvidencePage.tsx:630` | Isto |
-| `web-admin/src/features/finances/ViewTransactionDialog.tsx:57` | Isto |
-| `web-admin/src/features/finances/TransactionsFlatTable.tsx` | `format(date, 'MMM d, yyyy')` → `formatDate(...)` |
-| `web-admin/src/features/chat/ChatPage.tsx` | Svi datumi u porukama |
+| `web-admin/src/features/auth/RegisterPage.tsx` | Checkbox "Prihvatam uslove korišćenja" pre registracije |
+| `web-admin/src/pages/TermsPage.tsx` | **NOV FAJL** — statična stranica sa uslovima |
+| `web-admin/src/pages/PrivacyPage.tsx` | **NOV FAJL** — politika privatnosti |
+| Router | Dodati `/terms` i `/privacy` rute |
 
 ---
 
-## 11. Guide/Tutorial — nastavak
+### 9. Jezik i region na osnovu lokacije
 
 | Fajl | Izmena |
 |------|--------|
-| `web-admin/src/context/OnboardingContext.tsx` | Dodati `PAGE_TUTORIALS` za: `calendar`, `chat`, `club-profile` |
-| `web-admin/src/features/calendar/CalendarPage.tsx` | Dodati `data-tutorial="..."` atribute na dugmad |
-| `web-admin/src/features/chat/ChatPage.tsx` | Isto |
+| `web-admin/src/i18n.ts` | Auto-detekcija jezika iz `navigator.language` |
+| `web-admin/src/features/settings/SettingsPage.tsx` | Dropdown za ručni izbor jezika |
 
 ---
 
-## 12. Pre-popuniti iznos članarine pri evidentiranju uplate
+### 10. Staviti CORS
 
 | Fajl | Izmena |
 |------|--------|
-| `web-admin/src/features/evidence/RecordPaymentDialog.tsx:33` | `useState(membershipFee ?? DEFAULT_MEMBERSHIP_FEE)` za amount input |
+| `backend/src/app.ts` ili `server.ts` | Proveriti/dodati `cors()` middleware sa whitelistom domena |
 
 ---
 
-## 13. Novi tip događaja — izbor boje
+### 11. Prvi mesec besplatno (trial)
 
 | Fajl | Izmena |
 |------|--------|
-| `web-admin/src/features/calendar/CreateEventDialog.tsx:77` | `EventType` interface dobija `color: string` |
-| `web-admin/src/features/calendar/CreateEventDialog.tsx` | Dialog za novi tip: dodati color picker (12 preset boja, krug-dugmad) |
-| `web-admin/src/features/calendar/CalendarPage.tsx` | Event chip boja = `event.color` ili boja tipa |
-| `backend/src/models/Event.ts` | Dodati `color: { type: String, default: '#22c55e' }` |
-
----
-
-## 14. Kad je već plaćeno — pomeriti/sakriti dugme
-
-| Fajl | Izmena |
-|------|--------|
-| `web-admin/src/features/evidence/EvidencePage.tsx` | Ako `member.hasPaid` → dugme postaje sekundarno (outline, tekst "Ažuriraj") |
+| `backend/src/models/Club.ts` | `trialEndsAt: { type: Date, default: now + 30 dana }` |
+| `backend/src/controllers/settingsController.ts` | `GET /settings/subscription` → `{ isInTrial, trialEndsAt, daysLeft }` |
+| `web-admin/src/features/settings/SettingsPage.tsx` | Banner "Ostalo X dana besplatnog perioda" |
 
 ---
 
 ## Redosled implementacije
 
 ```
-1.  RecordPaymentDialog pre-fill iznosa          → 20 min
-2.  Bold iznosi u pie chartu                     → 10 min
-3.  Datumi dd/MM/yyyy (dateUtils.ts)             → 1.5h
-4.  Chat → profil člana (Link)                  → 30 min
-5.  Dugmići na profilu člana                     → 1h
-6.  Upload slike vlasnika (endpoint postoji)     → 1h
-7.  Lokacija obavezna za event                   → 1h
-8.  Tip događaja sa bojom                        → 3h
-9.  Grupiranje po treneru + toggle               → 3h
-10. Kad je platio → pomeriti dugme              → 45 min
-11. Prvi mesec besplatno                         → 2h
-12. Google Maps za lokaciju                      → 3h (treba API ključ)
-13. Onboarding popup                             → 5h
-14. Guide nastavak                               → 3h
+PRIORITET 1 — core funkcionalnost
+1.                     → 6h
+                     → 1h
+3.                    → 1h
+4.  CORS backend                                 → 30 min
 
+PRIORITET 2 — korisničko iskustvo
+5.              → 3h
+6.               → 4h
+7.           → 1h
+8.  Globalni search                              → 4h
+9.  Terms & conditions                           → 2h
+
+PRIORITET 3 — polish
+10. Guide/tutorial za sve ekrane                 → 3h
+11. Trial (prvi mesec besplatno)                 → 2h
 ```

@@ -21,6 +21,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Building2, User, CreditCard, Save, Key, Globe, Eye, EyeOff, ChevronDown, ChevronUp, Camera, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useOnboarding } from '@/context/OnboardingContext';
+import { SUPPORTED_LANGUAGES } from '@/locales/i18n';
 
 export function SettingsPage() {
   const { t, i18n } = useTranslation();
@@ -545,21 +546,17 @@ export function SettingsPage() {
           <CardDescription>{t('settings.languageDescription')}</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-3">
-            <Button
-              variant={i18n.language === 'sr' ? 'default' : 'outline'}
-              onClick={() => i18n.changeLanguage('sr')}
-              className={i18n.language === 'sr' ? 'bg-green-600 hover:bg-green-700' : ''}
-            >
-              🇷🇸 Srpski
-            </Button>
-            <Button
-              variant={i18n.language === 'en' ? 'default' : 'outline'}
-              onClick={() => i18n.changeLanguage('en')}
-              className={i18n.language === 'en' ? 'bg-green-600 hover:bg-green-700' : ''}
-            >
-              🇬🇧 English
-            </Button>
+          <div className="flex flex-wrap gap-3">
+            {Object.entries(SUPPORTED_LANGUAGES).map(([code, lang]) => (
+              <Button
+                key={code}
+                variant={i18n.language === code ? 'default' : 'outline'}
+                onClick={() => i18n.changeLanguage(code)}
+                className={i18n.language === code ? 'bg-green-600 hover:bg-green-700' : ''}
+              >
+                {lang.flag} {lang.nativeName}
+              </Button>
+            ))}
           </div>
         </CardContent>
       </Card>

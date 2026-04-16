@@ -48,7 +48,9 @@
       "Bash(node -e:*)",
       "Bash(npm run seed:members:*)",
       "Bash(grep -E \"\\\\.\\(tsx|ts|jsx|js\\)$\")",
-      "Bash(xargs grep:*)"
+      "Bash(xargs grep:*)",
+      "Bash(xargs -I {} sh -c 'echo \"=== {} ===\" && head -100 {}')",
+      "Bash(grep -rn \"toast\\\\|Dialog\\\\|'Uspešno\\\\|'Greška\\\\|'Plaćeno\\\\|'Dodaj\\\\|'Obriši\\\\|'Sačuvaj\\\\|'Otkaži\\\\|'Učitavanje\" /d/4sports-monorepo/web-admin/src/features/evidence/*.tsx)"
     ],
     "deny": [],
     "ask": []

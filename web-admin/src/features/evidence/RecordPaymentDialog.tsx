@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
@@ -15,8 +16,6 @@ import { useRecordPayment } from './useEvidence';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
-const MONTHS = ['Januar', 'Februar', 'Mart', 'April', 'Maj', 'Jun', 'Jul', 'Avgust', 'Septembar', 'Oktobar', 'Novembar', 'Decembar'];
-
 const DEFAULT_MEMBERSHIP_FEE = 3000;
 
 interface RecordPaymentDialogProps {
@@ -31,11 +30,14 @@ interface RecordPaymentDialogProps {
 
 export function RecordPaymentDialog({ open, onOpenChange, memberId, memberName, month, year, membershipFee }: RecordPaymentDialogProps) {
   const fee = membershipFee || DEFAULT_MEMBERSHIP_FEE;
+  const { t } = useTranslation();
   const { toast } = useToast();
   const recordPayment = useRecordPayment();
   const [amount, setAmount] = useState(String(fee));
   const [paymentMethod, setPaymentMethod] = useState<'CASH' | 'BANK_TRANSFER'>('CASH');
   const [note, setNote] = useState('');
+
+  const months = t('calendar.months', { returnObjects: true }) as string[];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,15 +49,15 @@ export function RecordPaymentDialog({ open, onOpenChange, memberId, memberName, 
         amount: fee,
         paidAmount: Number(amount),
         paymentMethod,
-        note: note || `${MONTHS[month - 1]} ${year}`,
+        note: note || `${months[month - 1]} ${year}`,
         period: { month, year },
       });
 
-      toast({ title: 'Uspešno', description: `Uplata za ${memberName} evidentirana` });
+      toast({ title: t('common.success'), description: t('evidence.paymentRecorded', { name: memberName }) });
       resetForm();
       onOpenChange(false);
     } catch {
-      toast({ title: 'Greška', description: 'Uplata nije evidentirana', variant: 'destructive' });
+      toast({ title: t('common.error'), description: t('evidence.paymentFailed'), variant: 'destructive' });
     }
   };
 
@@ -69,17 +71,17 @@ export function RecordPaymentDialog({ open, onOpenChange, memberId, memberName, 
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) resetForm(); onOpenChange(isOpen); }}>
       <DialogContent className="sm:max-w-[400px]">
         <DialogHeader>
-          <DialogTitle>Evidentiraj uplatu</DialogTitle>
+          <DialogTitle>{t('evidence.recordPaymentTitle')}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
             <div className="text-sm text-muted-foreground">
               <span className="font-medium text-foreground">{memberName}</span>
-              {' '}&mdash;{' '}{MONTHS[month - 1]} {year}
+              {' '}&mdash;{' '}{months[month - 1]} {year}
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="amount">Iznos (RSD)</Label>
+              <Label htmlFor="amount">{t('evidence.amountRSD')}</Label>
               <Input
                 id="amount"
                 type="number"
@@ -92,7 +94,7 @@ export function RecordPaymentDialog({ open, onOpenChange, memberId, memberName, 
             </div>
 
             <div className="grid gap-2">
-              <Label>Način plaćanja</Label>
+              <Label>{t('evidence.paymentMethod')}</Label>
               <div className="grid grid-cols-2 gap-2">
                 <Button
                   type="button"
@@ -101,7 +103,7 @@ export function RecordPaymentDialog({ open, onOpenChange, memberId, memberName, 
                   onClick={() => setPaymentMethod('CASH')}
                 >
                   <Banknote className="mr-2 h-4 w-4" />
-                  Gotovina
+                  {t('evidence.cash')}
                 </Button>
                 <Button
                   type="button"
@@ -110,18 +112,18 @@ export function RecordPaymentDialog({ open, onOpenChange, memberId, memberName, 
                   onClick={() => setPaymentMethod('BANK_TRANSFER')}
                 >
                   <Building className="mr-2 h-4 w-4" />
-                  Prenos
+                  {t('evidence.bankTransfer')}
                 </Button>
               </div>
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="note">Napomena (opciono)</Label>
+              <Label htmlFor="note">{t('evidence.noteOptional')}</Label>
               <Textarea
                 id="note"
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
-                placeholder="Dodatna napomena..."
+                placeholder={t('evidence.notePlaceholder')}
                 className="min-h-[60px]"
               />
             </div>
@@ -129,13 +131,13 @@ export function RecordPaymentDialog({ open, onOpenChange, memberId, memberName, 
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={recordPayment.isPending}>
-              Otkaži
+              {t('common.cancel')}
             </Button>
             <Button type="submit" className="bg-green-600 hover:bg-green-700" disabled={recordPayment.isPending || !amount}>
               {recordPayment.isPending ? (
-                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Čuvanje...</>
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{t('common.saving')}</>
               ) : (
-                'Evidentiraj'
+                t('evidence.record')
               )}
             </Button>
           </DialogFooter>

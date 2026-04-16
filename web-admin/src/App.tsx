@@ -27,6 +27,7 @@ import { DevModeBanner } from './components/shared/DevModeBanner';
 import { TutorialTooltip } from './components/shared/TutorialTooltip';
 import { Toaster } from './components/ui/toaster';
 import { ErrorBoundary } from './components/shared/ErrorBoundary';
+import { OnboardingGuard } from './components/shared/OnboardingGuard';
 
 function App() {
   return (
@@ -35,6 +36,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <OnboardingProvider>
+          <OnboardingGuard>
           <DevModeBanner />
           <TutorialTooltip />
           <BrowserRouter>
@@ -175,6 +177,7 @@ function App() {
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
           </BrowserRouter>
+          </OnboardingGuard>
         </OnboardingProvider>
       </AuthProvider>
       <Toaster />

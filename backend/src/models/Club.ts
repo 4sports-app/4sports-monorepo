@@ -20,6 +20,8 @@ export interface IClub extends Document {
   _id: mongoose.Types.ObjectId;
   name: string;
   ownerId?: mongoose.Types.ObjectId; // Optional initially, set after user creation
+  sport?: string;
+  currency?: string;
   address?: string;
   phoneNumber?: string;
   email?: string;
@@ -33,6 +35,7 @@ export interface IClub extends Document {
   stadium?: string;
   history?: string;
   achievements?: string;
+  onboardingCompleted?: boolean;
   subscriptionPlan: SubscriptionPlan;
   memberLimit: number;
   currentMembers: number;
@@ -84,8 +87,8 @@ const clubSchema = new Schema<IClub, IClubModel>(
       type: String,
       trim: true,
       match: [
-        /^\d{8,}$/,
-        'Please provide a valid phone number with at least 8 digits',
+        /^[\d\s\-+()]{8,}$/,
+        'Please provide a valid phone number with at least 8 characters',
       ],
     },
 
@@ -97,6 +100,22 @@ const clubSchema = new Schema<IClub, IClubModel>(
         /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
         'Please provide a valid email address',
       ],
+    },
+
+    sport: {
+      type: String,
+      trim: true,
+    },
+
+    currency: {
+      type: String,
+      trim: true,
+      default: 'RSD',
+    },
+
+    onboardingCompleted: {
+      type: Boolean,
+      default: false,
     },
 
     logo: { type: String, trim: true },

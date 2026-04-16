@@ -31,6 +31,9 @@ export const getClubSettings = async (req: Request, res: Response) => {
         email: club.email || '',
         logoUrl: club.logo || '',
         description: club.description || '',
+        sport: club.sport || '',
+        currency: club.currency || 'RSD',
+        onboardingCompleted: club.onboardingCompleted || false,
         website: club.website || '',
         facebook: club.facebook || '',
         instagram: club.instagram || '',
@@ -67,7 +70,7 @@ export const updateClubSettings = async (req: Request, res: Response) => {
     const clubId = req.user.clubId;
     if (!clubId) return res.status(403).json({ success: false, error: { code: 'FORBIDDEN', message: 'You must be associated with a club' } });
 
-    const { name, address, phoneNumber, email, logoUrl, description, website, facebook, instagram, twitter, foundedYear, stadium, history, achievements } = req.body;
+    const { name, address, phoneNumber, email, logoUrl, description, sport, currency, onboardingCompleted, website, facebook, instagram, twitter, foundedYear, stadium, history, achievements } = req.body;
 
     const club = await Club.findById(clubId);
     if (!club) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Club not found' } });
@@ -78,6 +81,9 @@ export const updateClubSettings = async (req: Request, res: Response) => {
     if (email !== undefined) club.email = email;
     if (logoUrl !== undefined) club.logo = logoUrl;
     if (description !== undefined) club.description = description;
+    if (sport !== undefined) club.sport = sport;
+    if (currency !== undefined) club.currency = currency;
+    if (onboardingCompleted !== undefined) club.onboardingCompleted = onboardingCompleted;
     if (website !== undefined) club.website = website;
     if (facebook !== undefined) club.facebook = facebook;
     if (instagram !== undefined) club.instagram = instagram;
@@ -100,6 +106,9 @@ export const updateClubSettings = async (req: Request, res: Response) => {
         email: club.email || '',
         logoUrl: club.logo || '',
         description: club.description || '',
+        sport: club.sport || '',
+        currency: club.currency || 'RSD',
+        onboardingCompleted: club.onboardingCompleted || false,
         website: club.website || '',
         facebook: club.facebook || '',
         instagram: club.instagram || '',

@@ -54,8 +54,6 @@ import { RecordMedicalDialog } from './RecordMedicalDialog';
 import { formatDate } from '@/lib/dateUtils';
 import { Skeleton } from '@/components/ui/skeleton';
 
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun', 'Jul', 'Avg', 'Sep', 'Okt', 'Nov', 'Dec'];
-
 const getInitials = (name: string): string =>
   name.split(' ').map((n) => n[0]).join('').substring(0, 2).toUpperCase();
 
@@ -98,7 +96,7 @@ export function EvidencePage() {
 
       const gId = m.group?._id || 'unknown';
       if (!groupMap.has(gId)) {
-        groupMap.set(gId, { name: m.group?.name || 'Bez grupe', color: m.group?.color, members: [] });
+        groupMap.set(gId, { name: m.group?.name || t('evidence.noGroup'), color: m.group?.color, members: [] });
       }
       if (searchQuery) {
         if (m.memberName.toLowerCase().includes(searchQuery.toLowerCase())) {
@@ -119,7 +117,7 @@ export function EvidencePage() {
         totalCount: data.members.length,
       }))
       .filter((g) => g.totalCount > 0);
-  }, [membershipData, searchQuery, filterStatus]);
+  }, [membershipData, searchQuery, filterStatus, t]);
 
   // Group medical evidence by group
   const medicalGroups = useMemo(() => {
@@ -133,7 +131,7 @@ export function EvidencePage() {
 
       const gId = m.group?._id || 'unknown';
       if (!groupMap.has(gId)) {
-        groupMap.set(gId, { name: m.group?.name || 'Bez grupe', color: m.group?.color, members: [] });
+        groupMap.set(gId, { name: m.group?.name || t('evidence.noGroup'), color: m.group?.color, members: [] });
       }
       if (searchQuery) {
         if (m.memberName.toLowerCase().includes(searchQuery.toLowerCase())) {
@@ -154,7 +152,7 @@ export function EvidencePage() {
         totalCount: data.members.length,
       }))
       .filter((g) => g.totalCount > 0);
-  }, [medicalData, searchQuery, filterStatus]);
+  }, [medicalData, searchQuery, filterStatus, t]);
 
   const handleOpenPaymentDialog = (memberId: string, memberName: string, membershipFee?: number) => {
     setSelectedMember({ id: memberId, name: memberName, membershipFee });
@@ -169,18 +167,18 @@ export function EvidencePage() {
   const handleSendReminder = async (memberId: string) => {
     try {
       await sendReminderMutation.mutateAsync(memberId);
-      toast({ title: 'Uspešno', description: 'Podsetnik poslat' });
+      toast({ title: t('common.success'), description: t('evidence.reminderSent') });
     } catch {
-      toast({ title: 'Greška', description: 'Podsetnik nije poslat', variant: 'destructive' });
+      toast({ title: t('common.error'), description: t('evidence.reminderFailed'), variant: 'destructive' });
     }
   };
 
   const handleSendMedicalReminder = async (memberId: string) => {
     try {
       await sendMedicalReminderMutation.mutateAsync(memberId);
-      toast({ title: 'Uspešno', description: 'Podsetnik poslat' });
+      toast({ title: t('common.success'), description: t('evidence.reminderSent') });
     } catch {
-      toast({ title: 'Greška', description: 'Podsetnik nije poslat', variant: 'destructive' });
+      toast({ title: t('common.error'), description: t('evidence.reminderFailed'), variant: 'destructive' });
     }
   };
 
@@ -191,9 +189,9 @@ export function EvidencePage() {
       } else {
         await sendMedicalReminderAllMutation.mutateAsync();
       }
-      toast({ title: 'Uspešno', description: 'Podsetnici su poslati svim članovima' });
+      toast({ title: t('common.success'), description: t('evidence.remindersAllSent') });
     } catch {
-      toast({ title: 'Greška', description: 'Podsetnici nisu poslati', variant: 'destructive' });
+      toast({ title: t('common.error'), description: t('evidence.remindersAllFailed'), variant: 'destructive' });
     }
   };
 
@@ -258,7 +256,7 @@ export function EvidencePage() {
       {activeTab === 'membership' ? (
         <div className="grid grid-cols-3 gap-3">
           <div className="bg-muted rounded-lg p-4">
-            <p className="text-xs text-muted-foreground mb-1">Ukupno plaćeno</p>
+            <p className="text-xs text-muted-foreground mb-1">{t('evidence.totalPaid')}</p>
             <p className="text-2xl font-bold text-foreground">{stats?.paid || 0}/{stats?.total || 0}</p>
           </div>
           <div className="bg-muted rounded-lg p-4">
@@ -273,15 +271,15 @@ export function EvidencePage() {
       ) : (
         <div className="grid grid-cols-3 gap-3">
           <div className="bg-muted rounded-lg p-4">
-            <p className="text-xs text-muted-foreground mb-1">Validni pregledi</p>
+            <p className="text-xs text-muted-foreground mb-1">{t('evidence.validExams')}</p>
             <p className="text-2xl font-bold text-green-500">{medStats?.valid || 0}</p>
           </div>
           <div className="bg-muted rounded-lg p-4">
-            <p className="text-xs text-muted-foreground mb-1">Ističe uskoro</p>
+            <p className="text-xs text-muted-foreground mb-1">{t('evidence.expiringSoon')}</p>
             <p className="text-2xl font-bold text-yellow-500">{medStats?.expiringSoon || 0}</p>
           </div>
           <div className="bg-muted rounded-lg p-4">
-            <p className="text-xs text-muted-foreground mb-1">Istekli / Nisu uneti</p>
+            <p className="text-xs text-muted-foreground mb-1">{t('evidence.expiredNotSet')}</p>
             <p className="text-2xl font-bold text-red-500">{(medStats?.expired || 0) + (medStats?.notSet || 0)}</p>
           </div>
         </div>
@@ -307,7 +305,7 @@ export function EvidencePage() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {MONTHS.map((m, i) => (
+                {(t('calendar.shortMonths', { returnObjects: true }) as string[]).map((m: string, i: number) => (
                   <SelectItem key={i} value={String(i + 1)}>{m}</SelectItem>
                 ))}
               </SelectContent>
@@ -334,13 +332,13 @@ export function EvidencePage() {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => setFilterStatus('all')}>
-              Svi
+              {t('common.all')}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setFilterStatus('paid')}>
-              {activeTab === 'membership' ? 'Plaćeno' : 'Validni'}
+              {activeTab === 'membership' ? t('evidence.paid') : t('evidence.validExams')}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setFilterStatus('unpaid')}>
-              {activeTab === 'membership' ? 'Neplaćeno' : 'Nevalidni'}
+              {activeTab === 'membership' ? t('evidence.unpaid') : t('evidence.invalidExams')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -370,7 +368,7 @@ export function EvidencePage() {
           {membershipGroups.length === 0 ? (
             <div className="py-12 text-center">
               <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
-              <p className="text-muted-foreground">Nema članova za prikaz</p>
+              <p className="text-muted-foreground">{t('evidence.noMembersToShow')}</p>
             </div>
           ) : (
             membershipGroups.map((group) => (
@@ -392,7 +390,7 @@ export function EvidencePage() {
                   <h3 className="font-semibold text-base">{group.name}</h3>
                   <span className="text-sm text-muted-foreground">{group.totalCount} {t('evidence.membersLabel')}</span>
                   <span className="text-xs text-muted-foreground ml-auto">
-                    {group.paidCount}/{group.totalCount} plaćeno
+                    {group.paidCount}/{group.totalCount} {t('evidence.paidOf')}
                   </span>
                 </div>
 
@@ -420,7 +418,7 @@ export function EvidencePage() {
           {medicalGroups.length === 0 ? (
             <div className="py-12 text-center">
               <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
-              <p className="text-muted-foreground">Nema članova za prikaz</p>
+              <p className="text-muted-foreground">{t('evidence.noMembersToShow')}</p>
             </div>
           ) : (
             medicalGroups.map((group) => (
@@ -442,7 +440,7 @@ export function EvidencePage() {
                   <h3 className="font-semibold text-base">{group.name}</h3>
                   <span className="text-sm text-muted-foreground">{group.totalCount} {t('evidence.membersLabel')}</span>
                   <span className="text-xs text-muted-foreground ml-auto">
-                    {group.validCount} validnih
+                    {group.validCount} {t('evidence.validCheck')}
                   </span>
                   <Button
                     variant="ghost"
@@ -453,7 +451,7 @@ export function EvidencePage() {
                       setSelectedGroupForBulkMedical(group);
                       setBulkMedicalDialogOpen(true);
                     }}
-                    title="Evidentiraj pregled za celu grupu"
+                    title={t('evidence.bulkMedicalTitle')}
                   >
                     <Stethoscope className="h-4 w-4 text-green-500" />
                   </Button>
@@ -557,11 +555,11 @@ function MembershipRow({
         <p className="font-medium text-foreground">{member.memberName}</p>
         <div className="flex items-center gap-1 text-xs">
           {isPaid ? (
-            <span className="text-green-500">Plaćeno ✓</span>
+            <span className="text-green-500">{t('evidence.paidCheck')} ✓</span>
           ) : isPartial ? (
-            <span className="text-orange-500">Delimično plaćeno ・</span>
+            <span className="text-orange-500">{t('evidence.partiallyPaidDot')} ・</span>
           ) : (
-            <span className="text-red-500">Nije plaćeno ・</span>
+            <span className="text-red-500">{t('evidence.notPaidDot')} ・</span>
           )}
           <span className="text-muted-foreground">{t('evidence.lastTraining', { date: t('evidence.lastTrainingYesterday') })}</span>
         </div>
@@ -582,7 +580,7 @@ function MembershipRow({
             e.stopPropagation();
             onMarkPaid();
           }}
-          title={isPaid ? 'Ažuriraj uplatu' : 'Evidentiraj uplatu'}
+          title={isPaid ? t('evidence.updatePayment') : t('evidence.recordPayment')}
         >
           <CreditCard className={`h-5 w-5 ${isPaid ? 'text-muted-foreground' : 'text-white'}`} />
         </Button>
@@ -598,7 +596,7 @@ function MembershipRow({
               onSendReminder();
             }}
             disabled={isReminderLoading}
-            title="Pošalji podsetnik"
+            title={t('evidence.sendReminder')}
           >
             <Bell className="h-5 w-5 text-white" />
           </Button>
@@ -621,11 +619,12 @@ function MedicalRow({
   isReminderLoading: boolean;
 }) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const statusConfig = {
-    VALID: { color: 'text-green-500', label: 'Validan ✓' },
-    EXPIRING_SOON: { color: 'text-yellow-500', label: 'Ističe uskoro ・' },
-    EXPIRED: { color: 'text-red-500', label: 'Istekao ・' },
-    NOT_SET: { color: 'text-red-500', label: 'Nije unet ・' },
+    VALID: { color: 'text-green-500', label: `${t('evidence.validCheck')} ✓` },
+    EXPIRING_SOON: { color: 'text-yellow-500', label: `${t('evidence.expiringSoonDot')} ・` },
+    EXPIRED: { color: 'text-red-500', label: `${t('evidence.expiredDot')} ・` },
+    NOT_SET: { color: 'text-red-500', label: `${t('evidence.notSetDot')} ・` },
   };
 
   const config = statusConfig[member.medicalStatus] || statusConfig.NOT_SET;
@@ -650,7 +649,7 @@ function MedicalRow({
         <div className="flex items-center gap-1 text-xs">
           <span className={config.color}>{config.label}</span>
           {member.expiryDate && (
-            <span className="text-muted-foreground">do {formatDate(member.expiryDate)}</span>
+            <span className="text-muted-foreground">{t('evidence.validUntilDate', { date: formatDate(member.expiryDate) })}</span>
           )}
         </div>
       </div>
@@ -666,7 +665,7 @@ function MedicalRow({
             e.stopPropagation();
             onUpdateMedical();
           }}
-          title="Ažuriraj pregled"
+          title={t('evidence.updateExam')}
         >
           <Stethoscope className="h-5 w-5 text-white" />
         </Button>
@@ -681,7 +680,7 @@ function MedicalRow({
             onSendReminder();
           }}
           disabled={isReminderLoading}
-          title="Pošalji podsetnik"
+          title={t('evidence.sendReminder')}
         >
           <Bell className="h-5 w-5 text-white" />
         </Button>
@@ -708,6 +707,7 @@ function BulkMedicalDialog({
   group: MedicalGroupWithMembers | null;
 }) {
   const { toast } = useToast();
+  const { t } = useTranslation();
   const bulkUpdateMedical = useBulkUpdateMedical();
   const today = toLocalDateStr(new Date());
 
@@ -748,12 +748,12 @@ function BulkMedicalDialog({
       });
 
       toast({
-        title: 'Uspešno',
-        description: `Lekarski pregled evidentiran za ${memberIds.length} članova grupe ${group.name}`,
+        title: t('common.success'),
+        description: t('evidence.bulkMedicalSuccess', { count: memberIds.length, group: group.name }),
       });
       onOpenChange(false);
     } catch {
-      toast({ title: 'Greška', description: 'Pregled nije ažuriran', variant: 'destructive' });
+      toast({ title: t('common.error'), description: t('evidence.medicalFailed'), variant: 'destructive' });
     }
   };
 
@@ -763,20 +763,20 @@ function BulkMedicalDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Stethoscope className="h-5 w-5 text-green-500" />
-            Pregled za celu grupu
+            {t('evidence.bulkMedicalTitle')}
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
             {group && (
               <div className="text-sm text-muted-foreground">
-                Grupa: <span className="font-medium text-foreground">{group.name}</span>
-                <span className="ml-2">({group.members.length} članova)</span>
+                {t('evidence.groupLabel')} <span className="font-medium text-foreground">{group.name}</span>
+                <span className="ml-2">({group.members.length} {t('evidence.membersLabel')})</span>
               </div>
             )}
 
             <div className="grid gap-2">
-              <Label htmlFor="bulkCheckDate">Datum pregleda</Label>
+              <Label htmlFor="bulkCheckDate">{t('evidence.examDate')}</Label>
               <Input
                 id="bulkCheckDate"
                 type="date"
@@ -788,7 +788,7 @@ function BulkMedicalDialog({
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="bulkExpiryDate">Važi do</Label>
+              <Label htmlFor="bulkExpiryDate">{t('evidence.validUntil')}</Label>
               <Input
                 id="bulkExpiryDate"
                 type="date"
@@ -797,19 +797,19 @@ function BulkMedicalDialog({
                 min={checkDate}
                 required
               />
-              <p className="text-xs text-muted-foreground">Automatski se postavlja na 6 meseci od datuma pregleda</p>
+              <p className="text-xs text-muted-foreground">{t('evidence.autoSixMonths')}</p>
             </div>
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={bulkUpdateMedical.isPending}>
-              Otkaži
+              {t('common.cancel')}
             </Button>
             <Button type="submit" className="bg-green-600 hover:bg-green-700" disabled={bulkUpdateMedical.isPending}>
               {bulkUpdateMedical.isPending ? (
-                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Čuvanje...</>
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{t('common.saving')}</>
               ) : (
-                `Sačuvaj za ${group?.members.length ?? 0} članova`
+                t('evidence.saveForMembers', { count: group?.members.length ?? 0 })
               )}
             </Button>
           </DialogFooter>

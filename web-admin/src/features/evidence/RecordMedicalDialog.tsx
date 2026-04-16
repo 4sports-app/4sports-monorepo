@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
@@ -28,6 +29,7 @@ const toLocalDateStr = (date: Date): string => {
 };
 
 export function RecordMedicalDialog({ open, onOpenChange, memberId, memberName }: RecordMedicalDialogProps) {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const updateMedical = useUpdateMedical();
   const today = toLocalDateStr(new Date());
@@ -60,10 +62,10 @@ export function RecordMedicalDialog({ open, onOpenChange, memberId, memberName }
         expiryDate: new Date(expiryDate).toISOString(),
       });
 
-      toast({ title: 'Uspešno', description: `Lekarski pregled za ${memberName} ažuriran` });
+      toast({ title: t('common.success'), description: t('evidence.medicalUpdated', { name: memberName }) });
       onOpenChange(false);
     } catch {
-      toast({ title: 'Greška', description: 'Pregled nije ažuriran', variant: 'destructive' });
+      toast({ title: t('common.error'), description: t('evidence.medicalFailed'), variant: 'destructive' });
     }
   };
 
@@ -78,7 +80,7 @@ export function RecordMedicalDialog({ open, onOpenChange, memberId, memberName }
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) resetForm(); onOpenChange(isOpen); }}>
       <DialogContent className="sm:max-w-[400px]">
         <DialogHeader>
-          <DialogTitle>Lekarski pregled</DialogTitle>
+          <DialogTitle>{t('evidence.medicalExamTitle')}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
@@ -87,7 +89,7 @@ export function RecordMedicalDialog({ open, onOpenChange, memberId, memberName }
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="checkDate">Datum pregleda</Label>
+              <Label htmlFor="checkDate">{t('evidence.examDate')}</Label>
               <Input
                 id="checkDate"
                 type="date"
@@ -99,7 +101,7 @@ export function RecordMedicalDialog({ open, onOpenChange, memberId, memberName }
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="expiryDate">Važi do</Label>
+              <Label htmlFor="expiryDate">{t('evidence.validUntil')}</Label>
               <Input
                 id="expiryDate"
                 type="date"
@@ -108,19 +110,19 @@ export function RecordMedicalDialog({ open, onOpenChange, memberId, memberName }
                 min={checkDate}
                 required
               />
-              <p className="text-xs text-muted-foreground">Automatski se postavlja na 6 meseci od datuma pregleda</p>
+              <p className="text-xs text-muted-foreground">{t('evidence.autoSixMonths')}</p>
             </div>
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={updateMedical.isPending}>
-              Otkaži
+              {t('common.cancel')}
             </Button>
             <Button type="submit" className="bg-green-600 hover:bg-green-700" disabled={updateMedical.isPending}>
               {updateMedical.isPending ? (
-                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Čuvanje...</>
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{t('common.saving')}</>
               ) : (
-                'Sačuvaj'
+                t('common.save')
               )}
             </Button>
           </DialogFooter>

@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { X, ChevronLeft, ChevronRight, SkipForward } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useOnboarding } from '@/context/OnboardingContext';
@@ -18,6 +19,7 @@ export function TutorialTooltip() {
     prevTooltip,
     skipTutorial,
   } = useOnboarding();
+  const { t } = useTranslation();
 
   const [position, setPosition] = useState<Position>({ top: 0, left: 0 });
   const [isVisible, setIsVisible] = useState(false);
@@ -141,10 +143,10 @@ export function TutorialTooltip() {
         {/* Content */}
         <div className="p-4">
           <h3 className="font-semibold text-foreground mb-2">
-            {currentTooltip.title}
+            {t(currentTooltip.titleKey)}
           </h3>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            {currentTooltip.description}
+            {t(currentTooltip.descriptionKey)}
           </p>
         </div>
 
@@ -157,7 +159,7 @@ export function TutorialTooltip() {
             className="text-muted-foreground"
           >
             <SkipForward className="h-4 w-4 mr-1" />
-            Preskoči
+            {t('clubSetup.skip')}
           </Button>
 
           <div className="flex items-center gap-2">
@@ -174,7 +176,7 @@ export function TutorialTooltip() {
               size="sm"
               onClick={nextTooltip}
             >
-              {isLastTooltip ? 'Završi' : 'Dalje'}
+              {isLastTooltip ? t('clubSetup.finish') : t('clubSetup.next')}
               {!isLastTooltip && <ChevronRight className="h-4 w-4 ml-1" />}
             </Button>
           </div>

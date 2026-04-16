@@ -4,142 +4,142 @@ import { createContext, useContext, useState, useEffect, useCallback, ReactNode 
 export interface TooltipConfig {
   id: string;
   targetSelector: string;
-  title: string;
-  description: string;
+  titleKey: string;
+  descriptionKey: string;
   position?: 'top' | 'bottom' | 'left' | 'right';
 }
 
 export interface PageTutorial {
   pageKey: string;
-  pageName: string;
-  description: string;
+  pageNameKey: string;
+  descriptionKey: string;
   tooltips: TooltipConfig[];
 }
 
-// Tutorial configurations for each page
+// Tutorial configurations for each page — values are i18n keys
 export const PAGE_TUTORIALS: Record<string, PageTutorial> = {
   dashboard: {
     pageKey: 'dashboard',
-    pageName: 'Dashboard',
-    description: 'Pregled glavnih statistika i performansi vašeg kluba.',
+    pageNameKey: 'navigation.dashboard',
+    descriptionKey: 'onboarding.dashboard.description',
     tooltips: [
       {
         id: 'dashboard-stats',
         targetSelector: '[data-tour="stats-cards"]',
-        title: 'Statistike kluba',
-        description: 'Ovde možete videti ukupan prihod, broj članova i finansijski status vašeg kluba.',
+        titleKey: 'onboarding.dashboard.stats.title',
+        descriptionKey: 'onboarding.dashboard.stats.description',
         position: 'bottom',
       },
       {
         id: 'dashboard-charts',
         targetSelector: '[data-tour="charts"]',
-        title: 'Grafici',
-        description: 'Vizuelni prikaz rasta članstva i finansijskih trendova kroz vreme.',
+        titleKey: 'onboarding.dashboard.charts.title',
+        descriptionKey: 'onboarding.dashboard.charts.description',
         position: 'top',
       },
     ],
   },
   members: {
     pageKey: 'members',
-    pageName: 'Članovi',
-    description: 'Upravljajte članovima vašeg kluba - dodajte nove, pratite plaćanja i medicinske preglede.',
+    pageNameKey: 'navigation.members',
+    descriptionKey: 'onboarding.members.description',
     tooltips: [
       {
         id: 'members-add',
         targetSelector: '[data-tour="add-member"]',
-        title: 'Dodaj člana',
-        description: 'Kliknite ovde da biste dodali novog člana u klub. Unesite osnovne podatke kao što su ime, datum rođenja i grupu.',
+        titleKey: 'onboarding.members.add.title',
+        descriptionKey: 'onboarding.members.add.description',
         position: 'bottom',
       },
       {
         id: 'members-filters',
         targetSelector: '[data-tour="filters"]',
-        title: 'Filteri',
-        description: 'Koristite filtere da biste brzo pronašli članove po statusu plaćanja, medicinskom statusu ili grupi.',
+        titleKey: 'onboarding.members.filters.title',
+        descriptionKey: 'onboarding.members.filters.description',
         position: 'bottom',
       },
       {
         id: 'members-table',
         targetSelector: '[data-tour="members-table"]',
-        title: 'Lista članova',
-        description: 'Ovde se prikazuju svi članovi. Kliknite na red za više detalja ili koristite akcije za uređivanje.',
+        titleKey: 'onboarding.members.table.title',
+        descriptionKey: 'onboarding.members.table.description',
         position: 'top',
       },
     ],
   },
   coaches: {
     pageKey: 'coaches',
-    pageName: 'Treneri',
-    description: 'Upravljajte trenerskim kadrom - pozovite nove trenere i pratite njihove ugovore.',
+    pageNameKey: 'navigation.coaches',
+    descriptionKey: 'onboarding.coaches.description',
     tooltips: [
       {
         id: 'coaches-invite',
         targetSelector: '[data-tour="invite-coach"]',
-        title: 'Pozovi trenera',
-        description: 'Generišite pozivni kod koji možete poslati treneru. Kod ima rok trajanja od 7 dana.',
+        titleKey: 'onboarding.coaches.invite.title',
+        descriptionKey: 'onboarding.coaches.invite.description',
         position: 'bottom',
       },
       {
         id: 'coaches-table',
         targetSelector: '[data-tour="coaches-table"]',
-        title: 'Lista trenera',
-        description: 'Pregled svih trenera sa njihovim kontakt podacima i statusom ugovora.',
+        titleKey: 'onboarding.coaches.table.title',
+        descriptionKey: 'onboarding.coaches.table.description',
         position: 'top',
       },
     ],
   },
   finances: {
     pageKey: 'finances',
-    pageName: 'Finansije',
-    description: 'Pratite prihode i rashode kluba, dodajte transakcije i analizirajte finansijsko stanje.',
+    pageNameKey: 'navigation.finances',
+    descriptionKey: 'onboarding.finances.description',
     tooltips: [
       {
         id: 'finances-add',
         targetSelector: '[data-tour="add-entry"]',
-        title: 'Dodaj transakciju',
-        description: 'Ručno unesite prihod ili rashod. Članarine se automatski beleže kada član plati.',
+        titleKey: 'onboarding.finances.add.title',
+        descriptionKey: 'onboarding.finances.add.description',
         position: 'bottom',
       },
       {
         id: 'finances-summary',
         targetSelector: '[data-tour="summary-cards"]',
-        title: 'Finansijski pregled',
-        description: 'Brzi pregled ukupnih prihoda, rashoda i neto profita za tekući mesec.',
+        titleKey: 'onboarding.finances.summary.title',
+        descriptionKey: 'onboarding.finances.summary.description',
         position: 'bottom',
       },
       {
         id: 'finances-chart',
         targetSelector: '[data-tour="finance-chart"]',
-        title: 'Grafikon',
-        description: 'Vizuelni prikaz odnosa prihoda i rashoda.',
+        titleKey: 'onboarding.finances.chart.title',
+        descriptionKey: 'onboarding.finances.chart.description',
         position: 'left',
       },
     ],
   },
   settings: {
     pageKey: 'settings',
-    pageName: 'Podešavanja',
-    description: 'Konfigurišite podatke o klubu, vaš profil i pregledajte plan pretplate.',
+    pageNameKey: 'navigation.settings',
+    descriptionKey: 'onboarding.settings.description',
     tooltips: [
       {
         id: 'settings-club',
         targetSelector: '[data-tour="club-settings"]',
-        title: 'Podaci o klubu',
-        description: 'Ažurirajte osnovne informacije o vašem klubu - ime, adresu, kontakt.',
+        titleKey: 'onboarding.settings.club.title',
+        descriptionKey: 'onboarding.settings.club.description',
         position: 'right',
       },
       {
         id: 'settings-profile',
         targetSelector: '[data-tour="profile-settings"]',
-        title: 'Vaš profil',
-        description: 'Upravljajte vašim ličnim podacima i profilnom slikom.',
+        titleKey: 'onboarding.settings.profile.title',
+        descriptionKey: 'onboarding.settings.profile.description',
         position: 'right',
       },
       {
         id: 'settings-subscription',
         targetSelector: '[data-tour="subscription"]',
-        title: 'Pretplata',
-        description: 'Pregledajte vaš trenutni plan i limite. Nadogradite za više mogućnosti.',
+        titleKey: 'onboarding.settings.subscription.title',
+        descriptionKey: 'onboarding.settings.subscription.description',
         position: 'right',
       },
     ],
