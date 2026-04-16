@@ -163,10 +163,10 @@ PRIORITET 2 — korisničko iskustvo
 5.              → 3h
 6.               → 4h
 7.           → 1h
-8.  Globalni search                              → 4h
-9.  Terms & conditions                           → 2h
+8.  Globalni search  xxx                            → 4h
+9.  Terms & conditions     x                      → 2h
 
 PRIORITET 3 — polish
-10. Guide/tutorial za sve ekrane                 → 3h
+10. Guide/tutorial za sve ekrane x                → 3h
 11. Trial (prvi mesec besplatno)                 → 2h
 ```
