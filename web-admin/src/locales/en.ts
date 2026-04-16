@@ -102,6 +102,7 @@ export default {
     enterEndTime: 'Enter end time',
     endTimeAfterStart: 'End time must be after start time',
     selectRepeatEnd: 'Select date until it repeats',
+    locationRequired: 'Location is required',
   },
 
   errors: {
@@ -192,6 +193,9 @@ export default {
     transactions: 'Transactions',
     incomeAndExpenses: 'Income & Expenses',
     groupBreakdown: 'Group Breakdown',
+    coachBreakdown: 'Coach Breakdown',
+    byGroup: 'Groups',
+    byCoach: 'Coaches',
     membersCard: 'Members',
     balance: 'Balance',
     transactionsCard: 'Transactions',
@@ -652,6 +656,9 @@ export default {
     changePassword: 'Change Password',
     profileSaved: 'Profile updated',
     profileSaveFailed: 'Unable to save profile',
+    profilePictureSaved: 'Profile picture updated',
+    profilePictureFailed: 'Unable to upload picture',
+    clickToChangePhoto: 'Click on picture to change',
     passwordReset: 'Password Reset',
     passwordResetDescription: 'Password reset email sent (feature coming soon)',
     currentPassword: 'Current Password',

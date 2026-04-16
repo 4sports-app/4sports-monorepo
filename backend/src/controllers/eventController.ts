@@ -52,7 +52,7 @@ export const createEvent = async (req: Request, res: Response) => {
   try {
     if (!req.user) return res.status(401).json({ success: false, error: { code: 'UNAUTHORIZED', message: 'Authentication required' } });
 
-    const { groupId, title, description, type, startTime, endTime, location, isMandatory, notes, equipment, maxParticipants, isRecurring, recurringPattern } = req.body;
+    const { groupId, title, description, type, color, startTime, endTime, location, isMandatory, notes, equipment, maxParticipants, isRecurring, recurringPattern } = req.body;
     const clubId = req.user.clubId;
 
     if (!clubId) return res.status(403).json({ success: false, error: { code: 'FORBIDDEN', message: 'You must be associated with a club' } });
@@ -67,6 +67,7 @@ export const createEvent = async (req: Request, res: Response) => {
       title,
       description,
       type,
+      color,
       startTime,
       endTime,
       location,
@@ -101,6 +102,7 @@ export const createEvent = async (req: Request, res: Response) => {
               title,
               description,
               type,
+              color,
               startTime: o.startTime,
               endTime: o.endTime,
               location,
@@ -200,7 +202,7 @@ export const updateEvent = async (req: Request, res: Response) => {
     if (!req.user) return res.status(401).json({ success: false, error: { code: 'UNAUTHORIZED', message: 'Authentication required' } });
 
     const { id } = req.params;
-    const { title, description, type, startTime, endTime, location, isMandatory, status, notes, equipment, maxParticipants } = req.body;
+    const { title, description, type, color, startTime, endTime, location, isMandatory, status, notes, equipment, maxParticipants } = req.body;
 
     const event = await Event.findById(id);
     if (!event) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Event not found' } });
@@ -209,6 +211,7 @@ export const updateEvent = async (req: Request, res: Response) => {
     if (title) event.title = title;
     if (description !== undefined) event.description = description;
     if (type) event.type = type;
+    if (color !== undefined) event.color = color;
     if (startTime) event.startTime = startTime;
     if (endTime) event.endTime = endTime;
     if (location !== undefined) event.location = location;

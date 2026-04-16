@@ -58,15 +58,9 @@ export function ClubProfilePage() {
     mutationFn: async (file: File) => {
       const formData = new FormData();
       formData.append('images', file);
-
       const response = await api.post<{ success: boolean; data: { urls: string[] } }>(
-        '/upload/club-logo',
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        }
+        '/upload/post-images',
+        formData
       );
       return response.data.data.urls[0];
     },

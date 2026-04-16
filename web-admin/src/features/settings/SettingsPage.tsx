@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -14,8 +15,10 @@ import {
   useSubscription,
 } from './useSettings';
 import { changePassword } from '@/services/auth';
+import api from '@/services/api';
 import { SkeletonCard } from '@/components/shared/SkeletonCard';
-import { Building2, User, CreditCard, Save, Key, Globe, Eye, EyeOff, ChevronDown, ChevronUp } from 'lucide-react';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Building2, User, CreditCard, Save, Key, Globe, Eye, EyeOff, ChevronDown, ChevronUp, Camera, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useOnboarding } from '@/context/OnboardingContext';
 
@@ -48,6 +51,24 @@ export function SettingsPage() {
 
   // Subscription
   const { data: subscription, isLoading: subLoading } = useSubscription();
+
+  // Profile picture upload
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const qc = useQueryClient();
+  const uploadAvatarMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append('profilePicture', file);
+      return api.post('/upload/profile-picture', formData);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['user-profile'] });
+      toast({ title: t('settings.profilePictureSaved') });
+    },
+    onError: () => {
+      toast({ title: t('settings.profilePictureFailed'), variant: 'destructive' });
+    },
+  });
 
   // Mutations
   const updateClubMutation = useUpdateClubSettings();
@@ -264,6 +285,42 @@ export function SettingsPage() {
               <CardDescription>{t('settings.personalInfoDescription')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Profile picture */}
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <Avatar className="h-20 w-20">
+                    <AvatarImage src={userProfile?.profileImage || undefined} />
+                    <AvatarFallback className="bg-primary text-primary-foreground text-xl">
+                      {userProfile?.fullName?.slice(0, 2).toUpperCase() || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <button
+                    type="button"
+                    className="absolute bottom-0 right-0 bg-primary text-primary-foreground rounded-full p-1.5 hover:bg-primary/90 transition-colors"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploadAvatarMutation.isPending}
+                  >
+                    {uploadAvatarMutation.isPending ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Camera className="h-3.5 w-3.5" />
+                    )}
+                  </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    className="hidden"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) uploadAvatarMutation.mutate(file);
+                      e.target.value = '';
+                    }}
+                  />
+                </div>
+                <p className="text-sm text-muted-foreground">{t('settings.clickToChangePhoto')}</p>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="fullName">{t('auth.fullName')}</Label>

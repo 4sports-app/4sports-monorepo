@@ -42,13 +42,12 @@ export const uploadProfilePicture = async (req: Request, res: Response) => {
     // Upload to Cloudinary
     const fileUrl = await uploadFile(req.file.buffer, req.file.originalname, 'profiles', req.file.mimetype);
 
-    // Update user profile picture
-    const user = await User.findById(req.user._id);
+    // Delete old profile picture if exists
+    const user = await User.findById(req.user._id).select('profileImage');
     if (!user) {
       return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'User not found' } });
     }
 
-    // Delete old profile picture if exists
     if (user.profileImage) {
       try {
         await deleteFile(user.profileImage);
@@ -57,8 +56,7 @@ export const uploadProfilePicture = async (req: Request, res: Response) => {
       }
     }
 
-    user.profileImage = fileUrl;
-    await user.save();
+    await User.updateOne({ _id: req.user._id }, { $set: { profileImage: fileUrl } });
 
     return res.status(200).json({ success: true, data: { url: fileUrl } });
   } catch (error: any) {

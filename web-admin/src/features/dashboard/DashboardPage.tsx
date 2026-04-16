@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DollarSign, TrendingUp, TrendingDown, AlertCircle, Wallet } from 'lucide-react';
 import { useDashboardV2 } from './useDashboard';
+import { useGroups } from '@/features/club-members/useClubMembers';
 import { KPICard } from './KPICard';
 import { QuickLinks } from './QuickLinks';
 import { IncomeExpenseChart } from './IncomeExpenseChart';
@@ -20,6 +21,7 @@ export const DashboardPage = () => {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [groupFilter, setGroupFilter] = useState<'profit' | 'income' | 'expense' | 'memberCount'>('profit');
   const { data, isLoading, error, refetch } = useDashboardV2(selectedYear);
+  const { data: groups } = useGroups();
   const { checkAndStartTutorial } = useOnboarding();
 
   useEffect(() => {
@@ -145,6 +147,7 @@ export const DashboardPage = () => {
               data={data.groupStats}
               filterMode={groupFilter}
               onFilterChange={setGroupFilter}
+              groups={groups}
             />
           ) : null}
         </div>

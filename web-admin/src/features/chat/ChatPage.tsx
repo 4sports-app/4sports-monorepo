@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -426,6 +426,7 @@ function ChatView({
   currentUserId: string;
 }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   // Handle both id and conversationId (backend returns conversationId)
   const conversationId = conversation.id || conversation.conversationId;
   const { messages, loading, loadingMore, hasMore, loadMore } = useMessages(conversationId || null);
@@ -575,7 +576,16 @@ function ChatView({
             )}
           </div>
           <div>
-            <CardTitle className="text-lg">{getConversationName()}</CardTitle>
+            <CardTitle
+              className={`text-lg ${!isGroup && otherParticipant ? 'cursor-pointer hover:underline' : ''}`}
+              onClick={() => {
+                if (!isGroup && otherParticipant) {
+                  navigate(`/profile/${otherParticipant.id}`);
+                }
+              }}
+            >
+              {getConversationName()}
+            </CardTitle>
             {otherParticipant && (
               <p className="text-sm text-muted-foreground">
                 {getRoleLabel(otherParticipant.role)}

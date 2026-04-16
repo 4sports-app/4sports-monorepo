@@ -1,6 +1,7 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
@@ -9,7 +10,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import type { GroupStatEntry } from '@/types';
+import type { GroupStatEntry, Group } from '@/types';
 
 type FilterMode = 'profit' | 'income' | 'expense' | 'memberCount';
 
@@ -52,10 +53,16 @@ const CustomTooltip = ({ active, payload, filterMode }: CustomTooltipProps) => {
   return null;
 };
 
+const COACH_COLORS = [
+  '#3b82f6', '#22c55e', '#f59e0b', '#8b5cf6', '#ef4444',
+  '#ec4899', '#06b6d4', '#f97316', '#84cc16', '#6366f1',
+];
+
 interface GroupBreakdownChartProps {
   data: GroupStatEntry[];
   filterMode: FilterMode;
   onFilterChange: (mode: FilterMode) => void;
+  groups?: Group[];
 }
 
 const getValueForMode = (entry: GroupStatEntry, mode: FilterMode): number => {
@@ -71,8 +78,9 @@ const getValueForMode = (entry: GroupStatEntry, mode: FilterMode): number => {
   }
 };
 
-export const GroupBreakdownChart = ({ data, filterMode, onFilterChange }: GroupBreakdownChartProps) => {
+export const GroupBreakdownChart = ({ data, filterMode, onFilterChange, groups }: GroupBreakdownChartProps) => {
   const { t } = useTranslation();
+  const [breakdownMode, setBreakdownMode] = useState<'group' | 'coach'>('group');
 
   const filterOptions: Array<{ value: FilterMode; label: string }> = [
     { value: 'profit', label: t('dashboard.filterByProfit') },
@@ -81,13 +89,41 @@ export const GroupBreakdownChart = ({ data, filterMode, onFilterChange }: GroupB
     { value: 'memberCount', label: t('dashboard.filterByMembers') },
   ];
 
+  // Aggregate stats by coach when in coach mode
+  const coachStats = useMemo(() => {
+    if (!groups || groups.length === 0) return [];
+    const coachMap = new Map<string, { name: string; totalIncome: number; totalExpense: number; profit: number; memberCount: number; colorIndex: number }>();
+    let colorIdx = 0;
+    groups.forEach((group) => {
+      const stat = data.find((s) => s.groupId === group._id);
+      if (!stat) return;
+      (group.coaches || []).forEach((coach) => {
+        const key = coach._id;
+        if (!coachMap.has(key)) {
+          coachMap.set(key, { name: coach.fullName, totalIncome: 0, totalExpense: 0, profit: 0, memberCount: 0, colorIndex: colorIdx++ });
+        }
+        const entry = coachMap.get(key)!;
+        entry.totalIncome += stat.totalIncome;
+        entry.totalExpense += stat.totalExpense;
+        entry.profit += stat.profit;
+        entry.memberCount += stat.memberCount;
+      });
+    });
+    return Array.from(coachMap.values()).map((c) => ({
+      name: c.name,
+      value: Math.abs(filterMode === 'profit' ? c.profit : filterMode === 'income' ? c.totalIncome : filterMode === 'expense' ? c.totalExpense : c.memberCount),
+      color: COACH_COLORS[c.colorIndex % COACH_COLORS.length],
+    }));
+  }, [groups, data, filterMode]);
+
   const chartData = useMemo(() => {
+    if (breakdownMode === 'coach' && coachStats.length > 0) return coachStats;
     return data.map((entry) => ({
       name: entry.groupName,
       value: Math.abs(getValueForMode(entry, filterMode)),
       color: entry.groupColor || '#3b82f6',
     }));
-  }, [data, filterMode]);
+  }, [data, filterMode, breakdownMode, coachStats]);
 
   const total = useMemo(() => {
     return chartData.reduce((sum, item) => sum + item.value, 0);
@@ -96,9 +132,31 @@ export const GroupBreakdownChart = ({ data, filterMode, onFilterChange }: GroupB
   return (
     <Card className="h-full">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-lg font-semibold">
-          {t('dashboard.groupBreakdown')}
-        </CardTitle>
+        <div className="flex flex-col gap-1">
+          <CardTitle className="text-lg font-semibold">
+            {breakdownMode === 'coach' ? t('dashboard.coachBreakdown') : t('dashboard.groupBreakdown')}
+          </CardTitle>
+          {groups && groups.length > 0 && (
+            <div className="flex gap-1">
+              <Button
+                variant={breakdownMode === 'group' ? 'default' : 'outline'}
+                size="sm"
+                className="h-6 text-xs px-2"
+                onClick={() => setBreakdownMode('group')}
+              >
+                {t('dashboard.byGroup')}
+              </Button>
+              <Button
+                variant={breakdownMode === 'coach' ? 'default' : 'outline'}
+                size="sm"
+                className="h-6 text-xs px-2"
+                onClick={() => setBreakdownMode('coach')}
+              >
+                {t('dashboard.byCoach')}
+              </Button>
+            </div>
+          )}
+        </div>
         <Select
           value={filterMode}
           onValueChange={(val) => onFilterChange(val as FilterMode)}

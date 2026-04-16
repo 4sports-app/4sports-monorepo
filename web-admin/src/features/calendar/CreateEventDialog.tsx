@@ -26,6 +26,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { useCreateEvent, useUpdateEvent, useGroups, Group, Event } from './useEvents';
 import { Loader2, ChevronDown, ChevronUp, Repeat, X, Plus, CalendarIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { LocationAutocomplete } from '@/components/shared/LocationAutocomplete';
 
 interface CreateEventDialogProps {
   open: boolean;
@@ -57,7 +58,13 @@ export function CreateEventDialog({ open, onOpenChange, selectedDate, event }: C
   const STORAGE_KEY_TYPES = '4sports_custom_event_types';
   const STORAGE_KEY_EQUIPMENT = '4sports_saved_equipment';
 
-  const [customTypes, setCustomTypes] = useState<{ id: string; label: string }[]>(() => {
+  const TYPE_COLORS = [
+    '#22c55e', '#3b82f6', '#ef4444', '#f59e0b', '#8b5cf6',
+    '#ec4899', '#06b6d4', '#f97316', '#84cc16', '#6366f1',
+    '#14b8a6', '#e11d48',
+  ];
+
+  const [customTypes, setCustomTypes] = useState<{ id: string; label: string; color?: string }[]>(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY_TYPES);
       return stored ? JSON.parse(stored) : [];
@@ -70,14 +77,15 @@ export function CreateEventDialog({ open, onOpenChange, selectedDate, event }: C
     } catch { return []; }
   });
   const [newTypeName, setNewTypeName] = useState('');
+  const [newTypeColor, setNewTypeColor] = useState('#3b82f6');
   const [showAddType, setShowAddType] = useState(false);
   const [newEquipmentName, setNewEquipmentName] = useState('');
   const [showAddEquipment, setShowAddEquipment] = useState(false);
 
-  const DEFAULT_TYPES = [
-    { id: 'TRAINING', label: t('calendar.training') },
-    { id: 'MATCH', label: t('calendar.match') },
-    { id: 'OTHER', label: t('calendar.other') },
+  const DEFAULT_TYPES: { id: string; label: string; color?: string }[] = [
+    { id: 'TRAINING', label: t('calendar.training'), color: '#22c55e' },
+    { id: 'MATCH', label: t('calendar.match'), color: '#ef4444' },
+    { id: 'OTHER', label: t('calendar.other'), color: '#3b82f6' },
   ];
   const EVENT_TYPES = [...DEFAULT_TYPES, ...customTypes];
   const DAYS_OF_WEEK_LABELS = t('calendar.days', { returnObjects: true }) as string[];
@@ -128,7 +136,7 @@ export function CreateEventDialog({ open, onOpenChange, selectedDate, event }: C
 
       // Ensure event type exists in customTypes if it's not a default type
       if (event.type && !DEFAULT_TYPES.some((t) => t.id === event.type) && !customTypes.some((t) => t.id === event.type)) {
-        const newCustomType = { id: event.type, label: event.type };
+        const newCustomType = { id: event.type, label: event.type, color: (event as any).color || '#3b82f6' };
         const updatedCustomTypes = [...customTypes, newCustomType];
         setCustomTypes(updatedCustomTypes);
         localStorage.setItem(STORAGE_KEY_TYPES, JSON.stringify(updatedCustomTypes));
@@ -176,6 +184,9 @@ export function CreateEventDialog({ open, onOpenChange, selectedDate, event }: C
     if (formData.isRecurring && !formData.recurringUntil) {
       newErrors.recurringUntil = t('validation.selectRepeatEnd');
     }
+    if (!formData.location.trim()) {
+      newErrors.location = t('validation.locationRequired');
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -204,11 +215,13 @@ export function CreateEventDialog({ open, onOpenChange, selectedDate, event }: C
       const [endHour, endMin] = formData.endTime.split(':').map(Number);
       endDateTime.setHours(endHour, endMin, 0, 0);
 
+      const selectedTypeColor = EVENT_TYPES.find((t) => t.id === formData.type)?.color || '#3b82f6';
       const eventData: any = {
         groupId: formData.groupId,
         title: formData.title.trim() || generateTitle(),
         description: formData.description.trim() || undefined,
         type: formData.type,
+        color: selectedTypeColor,
         startTime: startDateTime.toISOString(),
         endTime: endDateTime.toISOString(),
         location: formData.location.trim() || undefined,
@@ -294,11 +307,12 @@ export function CreateEventDialog({ open, onOpenChange, selectedDate, event }: C
     if (!name) return;
     const id = name.toUpperCase().replace(/\s+/g, '_');
     if (EVENT_TYPES.some((t) => t.id === id)) return;
-    const updated = [...customTypes, { id, label: name }];
+    const updated = [...customTypes, { id, label: name, color: newTypeColor }];
     setCustomTypes(updated);
     localStorage.setItem(STORAGE_KEY_TYPES, JSON.stringify(updated));
     handleChange('type', id);
     setNewTypeName('');
+    setNewTypeColor('#3b82f6');
     setShowAddType(false);
   };
 
@@ -361,12 +375,23 @@ export function CreateEventDialog({ open, onOpenChange, selectedDate, event }: C
               </Label>
               <Select value={formData.type} onValueChange={(value) => handleChange('type', value)}>
                 <SelectTrigger>
-                  <SelectValue />
+                  <div className="flex items-center gap-2">
+                    {EVENT_TYPES.find((t) => t.id === formData.type)?.color && (
+                      <span
+                        className="w-3 h-3 rounded-full shrink-0"
+                        style={{ backgroundColor: EVENT_TYPES.find((t) => t.id === formData.type)?.color }}
+                      />
+                    )}
+                    <SelectValue />
+                  </div>
                 </SelectTrigger>
                 <SelectContent>
                   {EVENT_TYPES.map((type) => (
                     <SelectItem key={type.id} value={type.id}>
-                      {type.label}
+                      <div className="flex items-center gap-2">
+                        <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: type.color || '#3b82f6' }} />
+                        {type.label}
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -383,20 +408,33 @@ export function CreateEventDialog({ open, onOpenChange, selectedDate, event }: C
                   {t('calendar.addCustomType')}
                 </Button>
               ) : (
-                <div className="flex gap-2">
-                  <Input
-                    value={newTypeName}
-                    onChange={(e) => setNewTypeName(e.target.value)}
-                    placeholder={t('calendar.customTypePlaceholder')}
-                    className="h-8 text-sm"
-                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addCustomType())}
-                  />
-                  <Button type="button" size="sm" className="h-8" onClick={addCustomType}>
-                    {t('common.add')}
-                  </Button>
-                  <Button type="button" variant="ghost" size="sm" className="h-8" onClick={() => { setShowAddType(false); setNewTypeName(''); }}>
-                    <X className="h-3 w-3" />
-                  </Button>
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <Input
+                      value={newTypeName}
+                      onChange={(e) => setNewTypeName(e.target.value)}
+                      placeholder={t('calendar.customTypePlaceholder')}
+                      className="h-8 text-sm"
+                      onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addCustomType())}
+                    />
+                    <Button type="button" size="sm" className="h-8" onClick={addCustomType}>
+                      {t('common.add')}
+                    </Button>
+                    <Button type="button" variant="ghost" size="sm" className="h-8" onClick={() => { setShowAddType(false); setNewTypeName(''); setNewTypeColor('#3b82f6'); }}>
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                  <div className="flex gap-1.5 flex-wrap">
+                    {TYPE_COLORS.map((color) => (
+                      <button
+                        key={color}
+                        type="button"
+                        className={`w-6 h-6 rounded-full transition-transform ${newTypeColor === color ? 'ring-2 ring-offset-1 ring-foreground scale-110' : 'hover:scale-110'}`}
+                        style={{ backgroundColor: color }}
+                        onClick={() => setNewTypeColor(color)}
+                      />
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
@@ -624,13 +662,15 @@ export function CreateEventDialog({ open, onOpenChange, selectedDate, event }: C
                 </div>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="location">{t('calendar.locationOptional')}</Label>
-                  <Input
+                  <Label htmlFor="location">{t('calendar.location')} *</Label>
+                  <LocationAutocomplete
                     id="location"
                     value={formData.location}
-                    onChange={(e) => handleChange('location', e.target.value)}
+                    onChange={(val) => handleChange('location', val)}
                     placeholder={t('calendar.enterLocation')}
+                    className={errors.location ? 'border-red-500' : ''}
                   />
+                  {errors.location && <p className="text-sm text-red-500">{errors.location}</p>}
                 </div>
 
                 <div className="grid gap-2">

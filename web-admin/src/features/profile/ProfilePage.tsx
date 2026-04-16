@@ -14,6 +14,8 @@ import type { MemberPayment, AttendanceRecord, MemberDetail } from './useProfile
 import { useCreateConversation } from '@/features/chat/useChat';
 import { EditMemberDialog } from '@/features/members/EditMemberDialog';
 import { CoachProfilePage } from './CoachProfilePage';
+import { RecordPaymentDialog } from '@/features/evidence/RecordPaymentDialog';
+import { RecordMedicalDialog } from '@/features/evidence/RecordMedicalDialog';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -46,6 +48,7 @@ import {
   HeartPulse,
   PencilIcon,
 } from 'lucide-react';
+import { formatDate } from '@/lib/dateUtils';
 
 function getInitials(name: string) {
   return name
@@ -67,6 +70,10 @@ export function ProfilePage() {
   const stateGroupName = (location.state as { groupName?: string } | null)?.groupName;
   const [activeTab, setActiveTab] = useState<Tab>('profile');
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [recordPaymentOpen, setRecordPaymentOpen] = useState(false);
+  const [recordMedicalOpen, setRecordMedicalOpen] = useState(false);
+  const currentMonth = new Date().getMonth() + 1;
+  const currentYear = new Date().getFullYear();
 
   // Mode A: /profile/:userId → resolve member by userId first
   const { data: basicMember, isLoading: loadingBasic, isError: memberByUserError } = useMemberByUserId(
@@ -107,14 +114,6 @@ export function ProfilePage() {
 
     const paidAmount = currentMonthPayment.paidAmount ?? 0;
     const totalAmount = currentMonthPayment.amount ?? 0;
-
-    console.log(`[PaymentStatus] Member: ${member.fullName}`, {
-      currentMonth,
-      currentYear,
-      paidAmount,
-      totalAmount,
-      status: paidAmount === 0 ? 'UNPAID' : paidAmount >= totalAmount ? 'PAID' : 'PARTIAL'
-    });
 
     if (paidAmount === 0) {
       return 'UNPAID';
@@ -287,8 +286,8 @@ export function ProfilePage() {
                 </div>
               )}
               <div className="flex items-center gap-2 mt-3 flex-wrap">
-                <PaymentStatusBadge status={calculatedPaymentStatus} t={t} />
-                <MedicalStatusBadge status={member.medicalCheckStatus} t={t} />
+                <PaymentStatusBadge status={calculatedPaymentStatus} t={t} onClick={() => setRecordPaymentOpen(true)} />
+                <MedicalStatusBadge status={member.medicalCheckStatus} t={t} onClick={() => setRecordMedicalOpen(true)} />
               </div>
             </div>
             {/* Action buttons - right side */}
@@ -351,6 +350,25 @@ export function ProfilePage() {
         onOpenChange={setEditDialogOpen}
         member={member ? { ...member, id: member._id } : null}
       />
+
+      {/* Record Payment Dialog */}
+      <RecordPaymentDialog
+        open={recordPaymentOpen}
+        onOpenChange={setRecordPaymentOpen}
+        memberId={member._id}
+        memberName={member.fullName}
+        month={currentMonth}
+        year={currentYear}
+        membershipFee={member.membershipFee}
+      />
+
+      {/* Record Medical Dialog */}
+      <RecordMedicalDialog
+        open={recordMedicalOpen}
+        onOpenChange={setRecordMedicalOpen}
+        memberId={member._id}
+        memberName={member.fullName}
+      />
     </div>
   );
 }
@@ -383,7 +401,7 @@ function TabButton({
 }
 
 // ─── Status Badges ─────────────────────────────────
-function PaymentStatusBadge({ status, t }: { status: string; t: (key: string) => string }) {
+function PaymentStatusBadge({ status, t, onClick }: { status: string; t: (key: string) => string; onClick?: () => void }) {
   const config: Record<string, { className: string; label: string }> = {
     PAID: { className: 'bg-green-600 text-white', label: t('status.paid') },
     PARTIAL: { className: 'bg-orange-500 text-white', label: t('profile.partial') },
@@ -391,14 +409,17 @@ function PaymentStatusBadge({ status, t }: { status: string; t: (key: string) =>
   };
   const c = config[status] || config.UNPAID;
   return (
-    <span className={`inline-flex items-center gap-1.5 text-sm font-medium px-3 py-1 rounded-full ${c.className}`}>
+    <span
+      className={`inline-flex items-center gap-1.5 text-sm font-medium px-3 py-1 rounded-full ${c.className} ${onClick ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
+      onClick={onClick}
+    >
       <Wallet className="h-4 w-4" />
       {c.label}
     </span>
   );
 }
 
-function MedicalStatusBadge({ status, t }: { status: string; t: (key: string) => string }) {
+function MedicalStatusBadge({ status, t, onClick }: { status: string; t: (key: string) => string; onClick?: () => void }) {
   const config: Record<string, { className: string; label: string }> = {
     VALID: { className: 'bg-green-600 text-white', label: t('status.valid') },
     EXPIRING_SOON: { className: 'bg-orange-500 text-white', label: t('status.expiringSoon') },
@@ -406,7 +427,10 @@ function MedicalStatusBadge({ status, t }: { status: string; t: (key: string) =>
   };
   const c = config[status] || config.EXPIRED;
   return (
-    <span className={`inline-flex items-center gap-1.5 text-sm font-medium px-3 py-1 rounded-full ${c.className}`}>
+    <span
+      className={`inline-flex items-center gap-1.5 text-sm font-medium px-3 py-1 rounded-full ${c.className} ${onClick ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
+      onClick={onClick}
+    >
       <HeartPulse className="h-4 w-4" />
       {c.label}
     </span>
@@ -421,11 +445,6 @@ function ProfileTab({
   member: MemberDetail;
   t: (key: string, opts?: Record<string, unknown>) => string;
 }) {
-  const formatDate = (dateStr?: string) => {
-    if (!dateStr) return '-';
-    return new Date(dateStr).toLocaleDateString('sr-RS');
-  };
-
   const parentInfo = member.parentId && typeof member.parentId === 'object' ? member.parentId : null;
 
   return (
@@ -537,18 +556,6 @@ function PaymentsTab({
 
     // Payment months = number of months with payment records
     const paymentMonths = membershipPayments.length;
-
-    console.log(`[PaymentsTab] Member: ${member.fullName}`, {
-      totalMonths,
-      paymentMonths,
-      fee,
-      totalExpected,
-      allPayments: payments.length,
-      membershipPayments: membershipPayments.length,
-      paidStatusPayments: paidStatusPayments.length,
-      totalPaid,
-      debt
-    });
 
     return { fee: member.membershipFee || 3000, totalMonths, paymentMonths, totalPaid, debt };
   }, [member, payments]);
@@ -754,11 +761,6 @@ function AttendanceRow({ record, t }: { record: AttendanceRecord; t: (key: strin
     TRAINING: t('eventTypes.training'),
     MATCH: t('eventTypes.match'),
     OTHER: t('eventTypes.other'),
-  };
-
-  const formatDate = (dateStr?: string) => {
-    if (!dateStr) return '-';
-    return new Date(dateStr).toLocaleDateString('sr-RS', { day: 'numeric', month: 'short', year: 'numeric' });
   };
 
   return (

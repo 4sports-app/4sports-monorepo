@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 import { FinanceEntry } from '@/types';
 import { Pencil, Trash2, Calendar, Tag, FileText, DollarSign, Users, CreditCard } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatDate } from '@/lib/dateUtils';
 
 interface ViewTransactionDialogProps {
   open: boolean;
@@ -52,14 +53,6 @@ export function ViewTransactionDialog({
   };
 
   const categoryLabel = getCategoryLabel();
-
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('sr-RS', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
-  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('sr-RS', {

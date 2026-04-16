@@ -171,12 +171,7 @@ export const useUploadPostImages = () => {
 
       const response = await api.post<{ success: boolean; data: { urls: string[] } }>(
         '/upload/post-images',
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        }
+        formData
       );
       return response.data.data.urls;
     },

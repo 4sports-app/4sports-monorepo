@@ -102,6 +102,7 @@ export default {
     enterEndTime: 'Unesite vreme završetka',
     endTimeAfterStart: 'Vreme završetka mora biti posle vremena početka',
     selectRepeatEnd: 'Izaberite datum do kog se ponavlja',
+    locationRequired: 'Lokacija je obavezna',
   },
 
   errors: {
@@ -192,6 +193,9 @@ export default {
     transactions: 'Transakcije',
     incomeAndExpenses: 'Prihodi i rashodi',
     groupBreakdown: 'Pregled po grupama',
+    coachBreakdown: 'Pregled po trenerima',
+    byGroup: 'Grupe',
+    byCoach: 'Treneri',
     membersCard: 'Članovi',
     balance: 'Stanje',
     transactionsCard: 'Transakcije',
@@ -656,6 +660,9 @@ export default {
     changePassword: 'Promeni lozinku',
     profileSaved: 'Profil je ažuriran',
     profileSaveFailed: 'Nije moguće sačuvati profil',
+    profilePictureSaved: 'Profilna slika je ažurirana',
+    profilePictureFailed: 'Nije moguće učitati sliku',
+    clickToChangePhoto: 'Kliknite na sliku za promenu',
     passwordReset: 'Resetovanje lozinke',
     passwordResetDescription: 'Email za resetovanje lozinke je poslat (funkcija uskoro dolazi)',
     currentPassword: 'Trenutna lozinka',

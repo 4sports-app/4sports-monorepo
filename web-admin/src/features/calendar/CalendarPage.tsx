@@ -58,15 +58,13 @@ const normalizeEventType = (type: string): string => {
   return type;
 };
 
-const getEventTypeColor = (type: string): string => {
-  const normalized = normalizeEventType(type);
-  if (normalized === 'Trening') {
-    return 'bg-green-500';
+const getEventColor = (event: any): string => {
+  if (event.color) return event.color;
+  switch (event.type) {
+    case 'TRAINING': return '#22c55e';
+    case 'MATCH': return '#ef4444';
+    default: return '#3b82f6';
   }
-  if (normalized === 'Utakmica') {
-    return 'bg-red-500';
-  }
-  return 'bg-blue-500';
 };
 
 const formatEventTime = (dateString: string) => {
@@ -355,7 +353,8 @@ export function CalendarPage() {
                           {dayEvents.slice(0, 2).map((event) => (
                             <div
                               key={event._id}
-                              className={`${getEventTypeColor(event.type)} text-white text-xs px-1 py-0.5 rounded truncate`}
+                              className="text-white text-xs px-1 py-0.5 rounded truncate"
+                              style={{ backgroundColor: getEventColor(event) }}
                             >
                               {formatEventTime(event.startTime)}
                             </div>
@@ -488,7 +487,6 @@ export function CalendarPage() {
                     const eventDate = new Date(event.startTime);
                     const dayOfWeek = eventDate.toLocaleDateString('sr-RS', { weekday: 'short' }).toUpperCase();
                     const dayOfMonth = eventDate.getDate();
-                    const eventTypeColor = getEventTypeColor(event.type);
                     const timeUntil = getTimeUntilEvent(event.startTime);
 
                     return (
@@ -498,7 +496,10 @@ export function CalendarPage() {
                         onClick={() => navigate(`/calendar/${event._id}`)}
                       >
                         {/* Date Badge */}
-                        <div className={`${eventTypeColor} text-white rounded-sm p-2 flex flex-col items-center justify-center min-w-[50px] font-medium shrink-0 self-start`}>
+                        <div
+                          className="text-white rounded-sm p-2 flex flex-col items-center justify-center min-w-[50px] font-medium shrink-0 self-start"
+                          style={{ backgroundColor: getEventColor(event) }}
+                        >
                           <div className="text-xl font-bold leading-none">{dayOfMonth}</div>
                           <div className="text-[10px] mt-0.5">{dayOfWeek}</div>
                         </div>

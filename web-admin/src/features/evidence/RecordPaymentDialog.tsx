@@ -33,7 +33,7 @@ export function RecordPaymentDialog({ open, onOpenChange, memberId, memberName, 
   const fee = membershipFee || DEFAULT_MEMBERSHIP_FEE;
   const { toast } = useToast();
   const recordPayment = useRecordPayment();
-  const [amount, setAmount] = useState('');
+  const [amount, setAmount] = useState(String(fee));
   const [paymentMethod, setPaymentMethod] = useState<'CASH' | 'BANK_TRANSFER'>('CASH');
   const [note, setNote] = useState('');
 
@@ -60,7 +60,7 @@ export function RecordPaymentDialog({ open, onOpenChange, memberId, memberName, 
   };
 
   const resetForm = () => {
-    setAmount('');
+    setAmount(String(fee));
     setPaymentMethod('CASH');
     setNote('');
   };

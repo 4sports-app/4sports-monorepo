@@ -332,11 +332,7 @@ export const useUploadChatImages = () => {
         formData.append('files', file);
       });
 
-      const response = await api.post('/upload/chat-images', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      const response = await api.post('/upload/chat-images', formData);
       return response.data.data as { urls: string[] };
     },
   });

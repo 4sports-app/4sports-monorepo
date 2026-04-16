@@ -51,6 +51,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { RecordPaymentDialog } from './RecordPaymentDialog';
 import { RecordMedicalDialog } from './RecordMedicalDialog';
+import { formatDate } from '@/lib/dateUtils';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun', 'Jul', 'Avg', 'Sep', 'Okt', 'Nov', 'Dec'];
@@ -572,14 +573,18 @@ function MembershipRow({
         <Button
           variant="ghost"
           size="icon"
-          className="h-10 w-10 rounded-full bg-green-600 hover:bg-green-700 flex-shrink-0"
+          className={`h-10 w-10 rounded-full flex-shrink-0 ${
+            isPaid
+              ? 'bg-muted hover:bg-muted/80 border border-border'
+              : 'bg-green-600 hover:bg-green-700'
+          }`}
           onClick={(e) => {
             e.stopPropagation();
             onMarkPaid();
           }}
-          title="Evidentiraj uplatu"
+          title={isPaid ? 'Ažuriraj uplatu' : 'Evidentiraj uplatu'}
         >
-          <CreditCard className="h-5 w-5 text-white" />
+          <CreditCard className={`h-5 w-5 ${isPaid ? 'text-muted-foreground' : 'text-white'}`} />
         </Button>
 
         {/* Bell Icon - only for unpaid */}
@@ -624,11 +629,6 @@ function MedicalRow({
   };
 
   const config = statusConfig[member.medicalStatus] || statusConfig.NOT_SET;
-
-  const formatDate = (dateStr?: string) => {
-    if (!dateStr) return '';
-    return new Date(dateStr).toLocaleDateString('sr-RS', { day: 'numeric', month: 'short', year: 'numeric' });
-  };
 
   return (
     <div

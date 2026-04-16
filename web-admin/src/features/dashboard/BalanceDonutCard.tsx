@@ -157,7 +157,7 @@ export const BalanceDonutCard = ({ data }: BalanceDonutCardProps) => {
                       <span className="text-foreground">{item.name}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className={`font-medium ${item.balance >= 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>
+                      <span className={`font-bold ${item.balance >= 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>
                         {item.balance.toLocaleString()} RSD
                       </span>
                       <span className="text-muted-foreground">({percentage}%)</span>

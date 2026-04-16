@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Pencil, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/features/auth/AuthContext';
-import { format } from 'date-fns';
+import { formatDate } from '@/lib/dateUtils';
 
 interface TransactionsFlatTableProps {
   transactions: FinanceEntry[] | undefined;
@@ -72,7 +72,7 @@ export function TransactionsFlatTable({ transactions, groups, onEdit, onDelete, 
               className="cursor-pointer hover:bg-muted/50 transition-colors"
             >
               <TableCell className="whitespace-nowrap">
-                {format(new Date(txn.date), 'MMM d, yyyy')}
+                {formatDate(txn.date)}
               </TableCell>
               <TableCell>
                 <Badge variant={txn.type === 'INCOME' ? 'default' : 'destructive'} className={txn.type === 'INCOME' ? 'bg-green-600' : ''}>
