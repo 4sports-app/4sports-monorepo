@@ -11,13 +11,31 @@ import {
 import { auth } from '@/config/firebase';
 
 export const registerWithEmail = async (email: string, password: string): Promise<User> => {
-  const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-  return userCredential.user;
+  try {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    return userCredential.user;
+  } catch (error: any) {
+    console.error('Firebase Register Error:', {
+      code: error.code,
+      message: error.message,
+      email: email
+    });
+    throw error;
+  }
 };
 
 export const loginWithEmail = async (email: string, password: string): Promise<User> => {
-  const userCredential = await signInWithEmailAndPassword(auth, email, password);
-  return userCredential.user;
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    return userCredential.user;
+  } catch (error: any) {
+    console.error('Firebase Auth Error:', {
+      code: error.code,
+      message: error.message,
+      email: email
+    });
+    throw error;
+  }
 };
 
 export const logout = async (): Promise<void> => {
