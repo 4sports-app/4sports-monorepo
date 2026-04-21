@@ -40,6 +40,7 @@ import {
 import { SkeletonTable } from '@/components/shared/SkeletonTable';
 import { ErrorMessage } from '@/components/shared/ErrorMessage';
 import { useToast } from '@/hooks/use-toast';
+import { useOnboarding } from '@/context/OnboardingContext';
 
 // Helper to extract groupId string from potentially populated object
 function getMemberGroupId(member: Member): string {
@@ -61,6 +62,7 @@ export function ClubMembersPage() {
   const { t } = useTranslation();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { checkAndStartTutorial } = useOnboarding();
 
   // Search states
   const [coachSearch, setCoachSearch] = useState('');
@@ -90,6 +92,10 @@ export function ClubMembersPage() {
     const timer = setTimeout(() => setDebouncedCoachSearch(coachSearch), 300);
     return () => clearTimeout(timer);
   }, [coachSearch]);
+
+  useEffect(() => {
+    checkAndStartTutorial('clubMembers');
+  }, [checkAndStartTutorial]);
 
   // Data hooks
   const { data: coaches, isLoading: coachesLoading, isError: coachesError, refetch: refetchCoaches } = useCoaches();
@@ -283,7 +289,7 @@ export function ClubMembersPage() {
       <h1 className="text-2xl font-bold">{t('clubMembers.title')}</h1>
 
       {/* Header stat cards - two equal cards side by side */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div data-tour="cm-tabs" className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Coaches card */}
         <Card>
           <CardContent className="p-4 flex items-center gap-3">
@@ -299,6 +305,7 @@ export function ClubMembersPage() {
               </div>
             </div>
             <Button
+              data-tour="invite-codes"
               size="sm"
               className={showCoachInvite
                 ? 'bg-red-600 hover:bg-red-700 flex-shrink-0'
@@ -618,6 +625,7 @@ export function ClubMembersPage() {
               {/* New Group button at bottom */}
               <div className="border-t pt-4">
                 <Button
+                  data-tour="new-group"
                   className="w-full bg-green-600 hover:bg-green-700"
                   onClick={() => handleOpenGroupDialog()}
                 >

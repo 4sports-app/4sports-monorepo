@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useMemo, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -53,6 +53,7 @@ import { RecordPaymentDialog } from './RecordPaymentDialog';
 import { RecordMedicalDialog } from './RecordMedicalDialog';
 import { formatDate } from '@/lib/dateUtils';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useOnboarding } from '@/context/OnboardingContext';
 
 const getInitials = (name: string): string =>
   name.split(' ').map((n) => n[0]).join('').substring(0, 2).toUpperCase();
@@ -60,6 +61,8 @@ const getInitials = (name: string): string =>
 export function EvidencePage() {
   const { toast } = useToast();
   const { t } = useTranslation();
+  const { checkAndStartTutorial } = useOnboarding();
+  const location = useLocation();
   const now = new Date();
   const [activeTab, setActiveTab] = useState<'membership' | 'medical'>('membership');
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1);
@@ -73,11 +76,34 @@ export function EvidencePage() {
   const [bulkMedicalDialogOpen, setBulkMedicalDialogOpen] = useState(false);
   const [selectedGroupForBulkMedical, setSelectedGroupForBulkMedical] = useState<MedicalGroupWithMembers | null>(null);
 
+  useEffect(() => {
+    checkAndStartTutorial('evidence');
+  }, [checkAndStartTutorial]);
+
+  useEffect(() => {
+    const state = location.state as { filter?: 'all' | 'paid' | 'unpaid' } | null;
+    if (state?.filter) {
+      setFilterStatus(state.filter);
+      setActiveTab('membership');
+      window.history.replaceState({}, '');
+    }
+  }, [location.state]);
+
   const { data: membershipData, isLoading: membershipLoading } = useMembershipEvidence({
     month: selectedMonth,
     year: selectedYear,
   });
   const { data: medicalData, isLoading: medicalLoading } = useMedicalEvidence({});
+
+  useEffect(() => {
+    if (filterStatus === 'unpaid' && membershipData?.evidence) {
+      const ids = new Set<string>();
+      membershipData.evidence.forEach((m) => {
+        if (m.status !== 'PAID' && m.group?._id) ids.add(m.group._id);
+      });
+      if (ids.size > 0) setExpandedGroups((prev) => new Set([...prev, ...ids]));
+    }
+  }, [filterStatus, membershipData]);
 
   const sendReminderMutation = useSendPaymentReminder();
   const sendReminderAllMutation = useSendPaymentReminderAll();
@@ -286,7 +312,7 @@ export function EvidencePage() {
       )}
 
       {/* Search Bar + Filters */}
-      <div className="flex gap-3 items-center">
+      <div data-tour="evidence-search" className="flex gap-3 items-center">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -346,7 +372,7 @@ export function EvidencePage() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
-        <TabsList className="grid w-full grid-cols-2 bg-muted p-1 h-12">
+        <TabsList data-tour="evidence-tabs" className="grid w-full grid-cols-2 bg-muted p-1 h-12">
           <TabsTrigger
             value="membership"
             className="data-[state=active]:bg-green-600 data-[state=active]:text-white h-10 text-base gap-2"
@@ -481,6 +507,7 @@ export function EvidencePage() {
       {((activeTab === 'membership' && unpaidCount > 0) ||
         (activeTab === 'medical' && ((medStats?.expired || 0) + (medStats?.notSet || 0)) > 0)) && (
         <Button
+          data-tour="remind-all"
           className="w-full bg-green-600 hover:bg-green-700 h-11 text-base font-semibold rounded-xl"
           onClick={handleRemindAll}
           disabled={sendReminderAllMutation.isPending || sendMedicalReminderAllMutation.isPending}

@@ -47,6 +47,7 @@ import { CreatePostDialog } from './CreatePostDialog';
 import { SkeletonCard } from '@/components/shared/SkeletonCard';
 import { ErrorMessage } from '@/components/shared/ErrorMessage';
 import { useToast } from '@/hooks/use-toast';
+import { useOnboarding } from '@/context/OnboardingContext';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -141,7 +142,14 @@ export function NewsPage() {
   const location = useLocation();
   const { data: posts, isLoading, error, refetch } = usePosts();
   const deletePostMutation = useDeletePost();
+  const { checkAndStartTutorial } = useOnboarding();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+
+  useEffect(() => {
+    if (!isLoading) {
+      checkAndStartTutorial('news');
+    }
+  }, [isLoading, checkAndStartTutorial]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState<Post | null>(null);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
@@ -224,7 +232,7 @@ export function NewsPage() {
   return (
     <div className="flex gap-6 justify-center">
       {/* Left: Posts feed */}
-      <div className="flex-1 min-w-0 max-w-[700px] space-y-6">
+      <div data-tour="news-feed" className="flex-1 min-w-0 max-w-[700px] space-y-6">
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold">{t('news.title')}</h1>
@@ -234,6 +242,7 @@ export function NewsPage() {
           </div>
           {/* Mobile-only create button (sidebar hidden on small screens) */}
           <Button
+            data-tour="create-post"
             className="bg-green-600 hover:bg-green-700 lg:hidden"
             onClick={() => setCreateDialogOpen(true)}
           >

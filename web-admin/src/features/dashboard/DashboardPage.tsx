@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { DollarSign, TrendingUp, TrendingDown, AlertCircle, Wallet } from 'lucide-react';
 import { useDashboardV2 } from './useDashboard';
@@ -18,6 +19,7 @@ import { Card, CardContent } from '@/components/ui/card';
 
 export const DashboardPage = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [groupFilter, setGroupFilter] = useState<'profit' | 'income' | 'expense' | 'memberCount'>('profit');
   const { data, isLoading, error, refetch } = useDashboardV2(selectedYear);
@@ -106,6 +108,7 @@ export const DashboardPage = () => {
                 value={data.kpiCards.unpaidCount}
                 icon={AlertCircle}
                 trend={data.kpiCards.unpaidTrend}
+                onClick={() => navigate('/evidence', { state: { filter: 'unpaid' } })}
               />
             </>
           ) : null}

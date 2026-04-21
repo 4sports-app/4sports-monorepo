@@ -11,11 +11,24 @@ import {
 // Transform backend club data to frontend format
 const transformClubSettings = (data: any): ClubSettings => ({
   id: data._id || data.id,
-  clubName: data.name || '',
+  clubName: data.clubName || data.name || '',
   address: data.address || '',
   phoneNumber: data.phoneNumber || '',
   email: data.email || '',
-  logoUrl: data.logoUrl,
+  logoUrl: data.logoUrl || '',
+  sport: data.sport || '',
+  currency: data.currency || 'RSD',
+  onboardingCompleted: data.onboardingCompleted || false,
+  description: data.description || '',
+  foundedYear: data.foundedYear || '',
+  stadium: data.stadium || '',
+  clubColors: data.clubColors || '',
+  history: data.history || '',
+  achievements: data.achievements || '',
+  website: data.website || '',
+  facebook: data.facebook || '',
+  instagram: data.instagram || '',
+  twitter: data.twitter || '',
 });
 
 // Fetch club settings
@@ -37,10 +50,24 @@ export const useUpdateClubSettings = () => {
     mutationFn: async (data: UpdateClubSettingsData) => {
       // Transform frontend data to backend format
       const backendData: any = {};
-      if (data.clubName) backendData.name = data.clubName;
+      if (data.clubName !== undefined) backendData.name = data.clubName;
       if (data.address !== undefined) backendData.address = data.address;
       if (data.phoneNumber !== undefined) backendData.phoneNumber = data.phoneNumber;
       if (data.email !== undefined) backendData.email = data.email;
+      if (data.logoUrl !== undefined) backendData.logoUrl = data.logoUrl;
+      if (data.sport !== undefined) backendData.sport = data.sport;
+      if (data.currency !== undefined) backendData.currency = data.currency;
+      if (data.onboardingCompleted !== undefined) backendData.onboardingCompleted = data.onboardingCompleted;
+      if (data.description !== undefined) backendData.description = data.description;
+      if (data.foundedYear !== undefined) backendData.foundedYear = data.foundedYear;
+      if (data.stadium !== undefined) backendData.stadium = data.stadium;
+      if (data.clubColors !== undefined) backendData.clubColors = data.clubColors;
+      if (data.history !== undefined) backendData.history = data.history;
+      if (data.achievements !== undefined) backendData.achievements = data.achievements;
+      if (data.website !== undefined) backendData.website = data.website;
+      if (data.facebook !== undefined) backendData.facebook = data.facebook;
+      if (data.instagram !== undefined) backendData.instagram = data.instagram;
+      if (data.twitter !== undefined) backendData.twitter = data.twitter;
 
       const response = await api.put<{ success: boolean; data: any }>('/settings/club', backendData);
       return transformClubSettings(response.data.data);

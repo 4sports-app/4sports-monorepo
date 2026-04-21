@@ -179,7 +179,7 @@ export function ClubOnboardingDialog({ open, onComplete, existingClubName }: Clu
       setErrors(prev => ({ ...prev, logo: t('clubSetup.invalidImage') }));
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > 20 * 1024 * 1024) {
       setErrors(prev => ({ ...prev, logo: t('clubSetup.imageTooLarge') }));
       return;
     }

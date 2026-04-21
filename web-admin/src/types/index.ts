@@ -263,6 +263,19 @@ export interface ClubSettings {
   phoneNumber: string;
   email: string;
   logoUrl?: string;
+  sport?: string;
+  currency?: string;
+  onboardingCompleted?: boolean;
+  description?: string;
+  foundedYear?: string;
+  stadium?: string;
+  clubColors?: string;
+  history?: string;
+  achievements?: string;
+  website?: string;
+  facebook?: string;
+  instagram?: string;
+  twitter?: string;
 }
 
 export interface UpdateClubSettingsData {
@@ -271,6 +284,19 @@ export interface UpdateClubSettingsData {
   phoneNumber?: string;
   email?: string;
   logoUrl?: string;
+  sport?: string;
+  currency?: string;
+  onboardingCompleted?: boolean;
+  description?: string;
+  foundedYear?: string;
+  stadium?: string;
+  clubColors?: string;
+  history?: string;
+  achievements?: string;
+  website?: string;
+  facebook?: string;
+  instagram?: string;
+  twitter?: string;
 }
 
 export interface UserProfile {

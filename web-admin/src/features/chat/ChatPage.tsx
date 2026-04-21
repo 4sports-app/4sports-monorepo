@@ -37,6 +37,7 @@ import {
   ChatUser,
 } from './useChat';
 import { useAuth } from '@/features/auth/AuthContext';
+import { useOnboarding } from '@/context/OnboardingContext';
 import { cn } from '@/lib/utils';
 
 const formatTime = (timestamp: any, t: (key: string) => string): string => {
@@ -90,6 +91,7 @@ export function ChatPage() {
   const { conversations, loading: conversationsLoading } = useConversations();
   const { data: allUsers, isLoading: usersLoading } = useChatUsers();
   const createConversationMutation = useCreateConversation();
+  const { checkAndStartTutorial } = useOnboarding();
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [newChatDialogOpen, setNewChatDialogOpen] = useState(false);
@@ -105,6 +107,10 @@ export function ChatPage() {
       window.history.replaceState({}, '');
     }
   }, [location.state]);
+
+  useEffect(() => {
+    checkAndStartTutorial('chat');
+  }, [checkAndStartTutorial]);
 
   const filterLabels: Record<string, string> = {
     all: t('chat.all'),
@@ -221,6 +227,7 @@ export function ChatPage() {
           </p>
         </div>
         <Button
+          data-tour="new-chat"
           className="bg-green-600 hover:bg-green-700"
           onClick={() => setNewChatDialogOpen(true)}
         >
@@ -231,7 +238,7 @@ export function ChatPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-[calc(100%-5rem)]">
         {/* Conversations List */}
-        <Card className="lg:col-span-1 flex flex-col h-full max-h-full">
+        <Card data-tour="conversations" className="lg:col-span-1 flex flex-col h-full max-h-full">
           <CardHeader className="pb-2">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

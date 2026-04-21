@@ -8,13 +8,17 @@ interface KPICardProps {
   icon: LucideIcon;
   trend?: number;
   suffix?: string;
+  onClick?: () => void;
 }
 
-export const KPICard = ({ title, value, icon: Icon, trend, suffix = '' }: KPICardProps) => {
+export const KPICard = ({ title, value, icon: Icon, trend, suffix = '', onClick }: KPICardProps) => {
   const isPositive = trend !== undefined && trend >= 0;
 
   return (
-    <Card className="bg-card border-border">
+    <Card
+      className={cn('bg-card border-border', onClick && 'cursor-pointer hover:bg-accent/40 transition-colors')}
+      onClick={onClick}
+    >
       <CardContent className="p-6">
         <div className="flex items-start justify-between">
           <div className="flex-1">

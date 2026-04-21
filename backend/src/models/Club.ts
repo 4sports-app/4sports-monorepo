@@ -33,6 +33,7 @@ export interface IClub extends Document {
   twitter?: string;
   foundedYear?: string;
   stadium?: string;
+  clubColors?: string;
   history?: string;
   achievements?: string;
   onboardingCompleted?: boolean;
@@ -126,6 +127,7 @@ const clubSchema = new Schema<IClub, IClubModel>(
     twitter: { type: String, trim: true },
     foundedYear: { type: String, trim: true },
     stadium: { type: String, trim: true },
+    clubColors: { type: String, trim: true },
     history: { type: String, trim: true, maxlength: 2000 },
     achievements: { type: String, trim: true, maxlength: 2000 },
 

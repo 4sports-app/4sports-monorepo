@@ -40,6 +40,7 @@ export const getClubSettings = async (req: Request, res: Response) => {
         twitter: club.twitter || '',
         foundedYear: club.foundedYear || '',
         stadium: club.stadium || '',
+        clubColors: club.clubColors || '',
         history: club.history || '',
         achievements: club.achievements || '',
         subscriptionPlan: club.subscriptionPlan,
@@ -70,7 +71,7 @@ export const updateClubSettings = async (req: Request, res: Response) => {
     const clubId = req.user.clubId;
     if (!clubId) return res.status(403).json({ success: false, error: { code: 'FORBIDDEN', message: 'You must be associated with a club' } });
 
-    const { name, address, phoneNumber, email, logoUrl, description, sport, currency, onboardingCompleted, website, facebook, instagram, twitter, foundedYear, stadium, history, achievements } = req.body;
+    const { name, address, phoneNumber, email, logoUrl, description, sport, currency, onboardingCompleted, website, facebook, instagram, twitter, foundedYear, stadium, clubColors, history, achievements } = req.body;
 
     const club = await Club.findById(clubId);
     if (!club) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Club not found' } });
@@ -90,6 +91,7 @@ export const updateClubSettings = async (req: Request, res: Response) => {
     if (twitter !== undefined) club.twitter = twitter;
     if (foundedYear !== undefined) club.foundedYear = foundedYear;
     if (stadium !== undefined) club.stadium = stadium;
+    if (clubColors !== undefined) club.clubColors = clubColors;
     if (history !== undefined) club.history = history;
     if (achievements !== undefined) club.achievements = achievements;
 
@@ -115,6 +117,7 @@ export const updateClubSettings = async (req: Request, res: Response) => {
         twitter: club.twitter || '',
         foundedYear: club.foundedYear || '',
         stadium: club.stadium || '',
+        clubColors: club.clubColors || '',
         history: club.history || '',
         achievements: club.achievements || '',
         subscriptionPlan: club.subscriptionPlan,

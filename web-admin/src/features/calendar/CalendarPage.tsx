@@ -1,7 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
+import { useOnboarding } from '@/context/OnboardingContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -97,6 +98,7 @@ export function CalendarPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { checkAndStartTutorial } = useOnboarding();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedGroupId, setSelectedGroupId] = useState<string>('all');
@@ -115,6 +117,12 @@ export function CalendarPage() {
   );
   const { data: groups } = useGroups();
   const deleteEventMutation = useDeleteEvent();
+
+  useEffect(() => {
+    if (!isLoading) {
+      checkAndStartTutorial('calendar');
+    }
+  }, [isLoading, checkAndStartTutorial]);
 
   // Generate calendar days
   const calendarDays = useMemo(() => {
@@ -267,7 +275,7 @@ export function CalendarPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Calendar Grid */}
-        <Card className="lg:col-span-2">
+        <Card data-tour="calendar-grid" className="lg:col-span-2">
           <CardHeader className="pb-4">
             <div className="flex items-center justify-between gap-4">
               <CardTitle className="flex items-center gap-2">
@@ -375,7 +383,7 @@ export function CalendarPage() {
         </Card>
 
         {/* Events List */}
-        <Card>
+        <Card data-tour="upcoming-events">
           <CardHeader className="pb-4">
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg">
@@ -578,6 +586,7 @@ export function CalendarPage() {
                   })}
                 </div>
                 <Button
+                  data-tour="new-event"
                   className="w-full mt-4 bg-green-600 hover:bg-green-700 h-12 text-base font-semibold"
                   onClick={() => setCreateDialogOpen(true)}
                 >

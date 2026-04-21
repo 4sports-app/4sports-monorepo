@@ -152,21 +152,11 @@ Treba da bude dovoljno da ukucaš ime/termin i izađu svi rezultati (članovi, g
 
 ## Redosled implementacije
 
-```
-PRIORITET 1 — core funkcionalnost
-1.                     → 6h
-                     → 1h
-3.                    → 1h
-4.  CORS backend                                 → 30 min
-
 PRIORITET 2 — korisničko iskustvo
-5.              → 3h
-6.               → 4h
-7.           → 1h
-8.  Globalni search  xxx                            → 4h
 9.  Terms & conditions     x                      → 2h
 
 PRIORITET 3 — polish
 10. Guide/tutorial za sve ekrane x                → 3h
-11. Trial (prvi mesec besplatno)                 → 2h
+
 ```
+d

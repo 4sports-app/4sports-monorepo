@@ -115,6 +115,6 @@ export const FILE_TYPES = {
 
 // File size configurations (in bytes)
 export const FILE_SIZE = {
-  IMAGE_MAX: 5 * 1024 * 1024, // 5MB
-  DOCUMENT_MAX: 10 * 1024 * 1024, // 10MB
+  IMAGE_MAX: 20 * 1024 * 1024, // 20MB
+  DOCUMENT_MAX: 20 * 1024 * 1024, // 20MB
 };

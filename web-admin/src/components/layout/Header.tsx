@@ -93,10 +93,15 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
 
   const pathToPageKey: Record<string, string> = {
     '/': 'dashboard',
-    '/club-members': 'members',
+    '/club-members': 'clubMembers',
     '/coaches': 'coaches',
     '/finances': 'finances',
     '/settings': 'settings',
+    '/calendar': 'calendar',
+    '/chat': 'chat',
+    '/news': 'news',
+    '/evidence': 'evidence',
+    '/club-profile': 'clubProfile',
   };
   const currentPageKey = pathToPageKey[location.pathname] || '';
   const currentTutorial = currentPageKey ? PAGE_TUTORIALS[currentPageKey] : null;

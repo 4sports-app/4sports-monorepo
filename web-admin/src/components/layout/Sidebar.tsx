@@ -53,10 +53,15 @@ const navItems: NavItem[] = [
 
 const pathToPageKey: Record<string, string> = {
   '/': 'dashboard',
-  '/club-members': 'members',
+  '/club-members': 'clubMembers',
   '/coaches': 'coaches',
   '/finances': 'finances',
   '/settings': 'settings',
+  '/calendar': 'calendar',
+  '/chat': 'chat',
+  '/news': 'news',
+  '/evidence': 'evidence',
+  '/club-profile': 'clubProfile',
 };
 
 export const Sidebar = ({ collapsed, mobileOpen, onClose, onMouseEnter, onMouseLeave }: SidebarProps) => {

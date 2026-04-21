@@ -1,7 +1,8 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMutation } from '@tanstack/react-query';
 import { useClubSettings, useUpdateClubSettings } from '@/features/settings/useSettings';
+import { useOnboarding } from '@/context/OnboardingContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,7 +32,14 @@ export function ClubProfilePage() {
   const { data: clubSettings, isLoading } = useClubSettings();
   const updateSettings = useUpdateClubSettings();
   const { toast } = useToast();
+  const { checkAndStartTutorial } = useOnboarding();
   const [isEditing, setIsEditing] = useState(false);
+
+  useEffect(() => {
+    if (!isLoading && clubSettings) {
+      checkAndStartTutorial('clubProfile');
+    }
+  }, [isLoading, clubSettings, checkAndStartTutorial]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -74,16 +82,16 @@ export function ClubProfilePage() {
         phoneNumber: clubSettings.phoneNumber || '',
         email: clubSettings.email || '',
         logoUrl: clubSettings.logoUrl || '',
-        foundedYear: (clubSettings as any).foundedYear || '',
-        stadium: (clubSettings as any).stadium || '',
-        clubColors: (clubSettings as any).clubColors || '',
-        description: (clubSettings as any).description || '',
-        history: (clubSettings as any).history || '',
-        achievements: (clubSettings as any).achievements || '',
-        website: (clubSettings as any).website || '',
-        facebook: (clubSettings as any).facebook || '',
-        instagram: (clubSettings as any).instagram || '',
-        twitter: (clubSettings as any).twitter || '',
+        foundedYear: clubSettings.foundedYear || '',
+        stadium: clubSettings.stadium || '',
+        clubColors: clubSettings.clubColors || '',
+        description: clubSettings.description || '',
+        history: clubSettings.history || '',
+        achievements: clubSettings.achievements || '',
+        website: clubSettings.website || '',
+        facebook: clubSettings.facebook || '',
+        instagram: clubSettings.instagram || '',
+        twitter: clubSettings.twitter || '',
       });
       setPreviewUrl(clubSettings.logoUrl || '');
     }
@@ -137,17 +145,17 @@ export function ClubProfilePage() {
         phoneNumber: formData.phoneNumber,
         email: formData.email,
         logoUrl,
-        ...(formData.foundedYear && { foundedYear: formData.foundedYear }),
-        ...(formData.stadium && { stadium: formData.stadium }),
-        ...(formData.clubColors && { clubColors: formData.clubColors }),
-        ...(formData.description && { description: formData.description }),
-        ...(formData.history && { history: formData.history }),
-        ...(formData.achievements && { achievements: formData.achievements }),
-        ...(formData.website && { website: formData.website }),
-        ...(formData.facebook && { facebook: formData.facebook }),
-        ...(formData.instagram && { instagram: formData.instagram }),
-        ...(formData.twitter && { twitter: formData.twitter }),
-      } as any);
+        foundedYear: formData.foundedYear,
+        stadium: formData.stadium,
+        clubColors: formData.clubColors,
+        description: formData.description,
+        history: formData.history,
+        achievements: formData.achievements,
+        website: formData.website,
+        facebook: formData.facebook,
+        instagram: formData.instagram,
+        twitter: formData.twitter,
+      });
       toast({
         title: t('common.success'),
         description: t('clubProfile.updateSuccess'),
@@ -179,16 +187,16 @@ export function ClubProfilePage() {
     phoneNumber: clubSettings?.phoneNumber || '',
     email: clubSettings?.email || '',
     logoUrl: clubSettings?.logoUrl || '',
-    foundedYear: (clubSettings as any)?.foundedYear || '',
-    stadium: (clubSettings as any)?.stadium || '',
-    clubColors: (clubSettings as any)?.clubColors || '',
-    description: (clubSettings as any)?.description || '',
-    history: (clubSettings as any)?.history || '',
-    achievements: (clubSettings as any)?.achievements || '',
-    website: (clubSettings as any)?.website || '',
-    facebook: (clubSettings as any)?.facebook || '',
-    instagram: (clubSettings as any)?.instagram || '',
-    twitter: (clubSettings as any)?.twitter || '',
+    foundedYear: clubSettings?.foundedYear || '',
+    stadium: clubSettings?.stadium || '',
+    clubColors: clubSettings?.clubColors || '',
+    description: clubSettings?.description || '',
+    history: clubSettings?.history || '',
+    achievements: clubSettings?.achievements || '',
+    website: clubSettings?.website || '',
+    facebook: clubSettings?.facebook || '',
+    instagram: clubSettings?.instagram || '',
+    twitter: clubSettings?.twitter || '',
   };
 
   return (
@@ -200,7 +208,7 @@ export function ClubProfilePage() {
           <p className="text-muted-foreground">{t('clubProfile.subtitle')}</p>
         </div>
         {!isEditing ? (
-          <Button onClick={handleEdit} className="bg-green-600 hover:bg-green-700">
+          <Button data-tour="edit-profile" onClick={handleEdit} className="bg-green-600 hover:bg-green-700">
             <PencilIcon className="mr-2 h-4 w-4" />
             {t('common.edit')}
           </Button>
@@ -223,7 +231,7 @@ export function ClubProfilePage() {
       </div>
 
       {/* Hero Section - Club Logo & Name */}
-      <Card>
+      <Card data-tour="club-hero">
         <CardContent className="p-8">
           <div className="flex flex-col md:flex-row items-center gap-8">
             {/* Logo */}
@@ -343,7 +351,7 @@ export function ClubProfilePage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column - Contact & Location */}
         <div className="space-y-6">
-          <Card>
+          <Card data-tour="contact-info">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <MapPin className="h-5 w-5 text-green-600" />
@@ -392,7 +400,7 @@ export function ClubProfilePage() {
           </Card>
 
           {/* Social Media */}
-          <Card>
+          <Card data-tour="social-media">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Globe className="h-5 w-5 text-green-600" />
